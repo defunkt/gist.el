@@ -1,9 +1,11 @@
 ;; gist.el --- Emacs integration for gist.github.com
 ;; Copyright (C) 2008  Christian Neukirchen <purl.org/net/chneukirchen>
 ;; Copyright (C) 2008  Chris Wanstrath <chris@ozmm.org>
+;; Copyright (C) 2008  Will Farrington <wcfarrington@gmail.com>
 ;; Licensed under the same terms as Emacs.
 
-;; Version: 0.3
+;; Version: 0.3.1
+;; 26aug2008  +wfarr+
 ;; 25aug2008  +defunkt+
 ;; 21jul2008  +chris+
 
