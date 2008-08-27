@@ -9,46 +9,13 @@
 
 ;; Ideas: fork
 
-(defvar gist-supported-modes-alist '((action-script-mode . "as")
-                                     (c-mode . "c")
-                                     (c++-mode . "cpp")
-                                     (common-lisp-mode . "el")
-                                     (css-mode . "css")
-                                     (diff-mode . "diff")
-                                     (emacs-lisp-mode . "el")
-                                     (erlang-mode . "erl")
-                                     (haskell-mode . "hs")
-                                     (html-mode . "html")
-                                     (io-mode . "io")
-                                     (java-mode . "java")
-                                     (javascript-mode . "js")
-                                     (jde-mode . "java")
-                                     (js2-mode . "js")
-                                     (lua-mode . "lua")
-                                     (ocaml-mode . "ml")
-                                     (objective-c-mode . "m")
-                                     (perl-mode "pl")
-                                     (php-mode . "php")
-                                     (python-mode . "sc")
-                                     (ruby-mode . "rbx")
-                                     (text-mode . "txt")
-                                     (sql-mode . "sql")
-                                     (scheme-mode . "scm")
-                                     (smalltalk-mode . "st")
-                                     (sh-mode . "sh")
-                                     (tcl-mode . "tcl")
-                                     (tex-mode . "tex")
-                                     (xml-mode . "xml")))
-
 (defun gist-region (begin end)
   "Post the current region as a new paste at gist.github.com
 Copies the URL into the kill ring."
   (interactive "r")
   (let* ((file (or (buffer-file-name) (buffer-name)))
          (name (file-name-nondirectory file))
-         (ext (or (cdr (assoc major-mode gist-supported-modes-alist))
-                  (file-name-extension file)
-                  "txt"))
+         (ext (or (file-name-extension file) "txt"))
          (output (generate-new-buffer " *gist*")))
     (shell-command-on-region
      begin end
@@ -56,7 +23,7 @@ Copies the URL into the kill ring."
                      "-F 'file_ext[gistfile1]=.%s' "
                      "-F 'file_name[gistfile1]=%s' "
                      "-F 'file_contents[gistfile1]=<-' "
-                     "http://gist.github.com/gists") ext name)
+                     "http://gist.github.com/gists &") ext name)
      output)
     (with-current-buffer output
       (re-search-backward "href=\"\\(.*\\)\"")
