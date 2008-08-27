@@ -23,7 +23,7 @@ Copies the URL into the kill ring."
                      "-F 'file_ext[gistfile1]=.%s' "
                      "-F 'file_name[gistfile1]=%s' "
                      "-F 'file_contents[gistfile1]=<-' "
-                     "http://gist.github.com/gists &") ext name)
+                     "http://gist.github.com/gists") ext name)
      output)
     (with-current-buffer output
       (re-search-backward "href=\"\\(.*\\)\"")
