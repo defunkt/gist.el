@@ -9,6 +9,7 @@
 
 ;; Ideas: fork
 
+;;;###autoload
 (defun gist-region (begin end)
   "Post the current region as a new paste at gist.github.com
 Copies the URL into the kill ring."
@@ -31,6 +32,7 @@ Copies the URL into the kill ring."
       (kill-new (match-string 1)))
     (kill-buffer output)))
 
+;;;###autoload
 (defun gist-buffer ()
   "Post the current buffer as a new paste at gist.github.com.
 Copies the URL into the kill ring."
@@ -40,6 +42,7 @@ Copies the URL into the kill ring."
 (defvar gist-fetch-url "http://gist.github.com/%d.txt"
   "Raw Gist content URL format")
 
+;;;###autoload
 (defun gist-fetch (id)
   "Fetches a Gist and inserts it into a new buffer
 If the Gist already exists in a buffer, switches to it"
