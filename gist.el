@@ -90,7 +90,8 @@ Totally not required."
                (if (or (string= github-user "")
                        (string= github-key ""))
                    ""
-                 (format "-F 'login=%s' -F 'token=%s'" github-user github-key)))))))
+                 (format "-F 'login=%s' -F 'token=%s'" github-user github-key))))
+         "")))
 
 (defun gist-buffer ()
   "Post the current buffer as a new paste at gist.github.com.
