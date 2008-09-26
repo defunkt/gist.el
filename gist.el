@@ -11,6 +11,9 @@
 
 ;; Ideas: fork
 
+(defvar github-username "")
+(defvar github-api-key "")
+
 (defvar gist-supported-modes-alist '((action-script-mode . "as")
                                      (c-mode . "c")
                                      (c++-mode . "cpp")
@@ -51,20 +54,43 @@ Copies the URL into the kill ring."
          (ext (or (cdr (assoc major-mode gist-supported-modes-alist))
                   (file-name-extension file)
                   "txt"))
-         (output (generate-new-buffer " *gist*")))
+         (output (generate-new-buffer " *gist*"))
+         (login (get-github-user-info)))
     (shell-command-on-region
      begin end
      (format (concat "curl -sS "
+                     "%s "
                      "-F 'file_ext[gistfile1]=.%s' "
                      "-F 'file_name[gistfile1]=%s' "
                      "-F 'file_contents[gistfile1]=<-' "
-                     "http://gist.github.com/gists") ext name)
+                     "http://gist.github.com/gists") login ext name)
      output)
     (with-current-buffer output
       (re-search-backward "href=\"\\(.*\\)\"")
       (message "Paste created: %s" (match-string 1))
       (kill-new (match-string 1)))
-    (kill-buffer output)))
+   (kill-buffer output)))
+
+(defun get-github-user-info (&optional github-user github-key)
+  "Asks the user for their github username and api key. If they
+don't have them, or wish to paste anonymously, they can do so.
+Totally not required."
+  (interactive)
+  (cond ((and (not (string= github-username ""))
+              (not (string= github-api-key "")))
+         (format "-F 'login=%s' -F 'token=%s'" github-username github-api-key))
+        ((and (> (length github-user) 1)
+              (> (length github-key) 1))
+         (format "-F 'login=%s' -F 'token=%s'" github-user github-key))
+        (t
+         (if (or (not github-user)
+                 (not github-key))
+             (let ((github-user (read-string "GitHub username?: "))
+                   (github-key (read-string "GitHub API key?: ")))
+               (if (or (string= github-user "")
+                       (string= github-key ""))
+                   ""
+                 (format "-F 'login=%s' -F 'token=%s'" github-user github-key)))))))
 
 (defun gist-buffer ()
   "Post the current buffer as a new paste at gist.github.com.
