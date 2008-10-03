@@ -45,7 +45,7 @@
                                      (tex-mode . "tex")
                                      (xml-mode . "xml")))
 
-(defun gist-region (begin end)
+(defun gist-region (begin end &optional private)
   "Post the current region as a new paste at gist.github.com
 Copies the URL into the kill ring."
   (interactive "r")
@@ -55,7 +55,8 @@ Copies the URL into the kill ring."
                   (file-name-extension file)
                   "txt"))
          (output (generate-new-buffer " *gist*"))
-         (login (get-github-user-info)))
+         (login (get-github-user-info))
+         (do-private (if private "-F private=1" "")))
     (shell-command-on-region
      begin end
      (format (concat "curl -sS "
@@ -63,13 +64,20 @@ Copies the URL into the kill ring."
                      "-F 'file_ext[gistfile1]=.%s' "
                      "-F 'file_name[gistfile1]=%s' "
                      "-F 'file_contents[gistfile1]=<-' "
-                     "http://gist.github.com/gists") login ext name)
+                     "%s "
+                     "http://gist.github.com/gists") login ext name do-private)
      output)
     (with-current-buffer output
       (re-search-backward "href=\"\\(.*\\)\"")
       (message "Paste created: %s" (match-string 1))
       (kill-new (match-string 1)))
    (kill-buffer output)))
+
+(defun gist-region-private (begin end)
+  "Post the current region as a new private paste at gist.github.com
+Copies the URL into the kill ring."
+  (interactive "r")
+  (gist-region (begin end t)))
 
 (defun get-github-user-info (&optional github-user github-key)
   "Asks the user for their github username and api key. If they
@@ -98,6 +106,12 @@ Totally not required."
 Copies the URL into the kill ring."
   (interactive)
   (gist-region (point-min) (point-max)))
+
+(defun gist-buffer-private ()
+  "Post the current buffer as a new private paste at gist.github.com.
+Copies the URL into the kill ring."
+  (interactive)
+  (gist-region (point-min) (point-max) t))
 
 (defvar gist-fetch-url "http://gist.github.com/%d.txt"
   "Raw Gist content URL format")
