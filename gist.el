@@ -77,7 +77,7 @@ Copies the URL into the kill ring."
   "Post the current region as a new private paste at gist.github.com
 Copies the URL into the kill ring."
   (interactive "r")
-  (gist-region (begin end t)))
+  (gist-region begin end t))
 
 (defun get-github-user-info (&optional github-user github-key)
   "Asks the user for their github username and api key. If they
@@ -111,7 +111,7 @@ Copies the URL into the kill ring."
   "Post the current buffer as a new private paste at gist.github.com.
 Copies the URL into the kill ring."
   (interactive)
-  (gist-region (point-min) (point-max) t))
+  (gist-region-private (point-min) (point-max)))
 
 (defvar gist-fetch-url "http://gist.github.com/%d.txt"
   "Raw Gist content URL format")
