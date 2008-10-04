@@ -113,6 +113,22 @@ Copies the URL into the kill ring."
   (interactive)
   (gist-region-private (point-min) (point-max)))
 
+(defun gist-region-or-buffer ()
+  "Post either the current region, or if mark is not set, the current buffer as a new paste at gist.github.com
+Copies the URL into the kill ring."
+  (interactive)
+  (condition-case nil
+      (gist-region (point) (mark))        
+      (mark-inactive (gist-buffer))))
+
+(defun gist-region-or-buffer-private ()
+  "Post either the current region, or if mark is not set, the current buffer as a new private paste at gist.github.com
+Copies the URL into the kill ring."
+  (interactive)
+  (condition-case nil
+      (gist-region-private (point) (mark))        
+      (mark-inactive (gist-buffer-private))))
+
 (defvar gist-fetch-url "http://gist.github.com/%d.txt"
   "Raw Gist content URL format")
 
