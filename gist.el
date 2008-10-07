@@ -45,6 +45,7 @@
                                      (tex-mode . "tex")
                                      (xml-mode . "xml")))
 
+;;;###autoload
 (defun gist-region (begin end &optional private)
   "Post the current region as a new paste at gist.github.com
 Copies the URL into the kill ring."
@@ -73,6 +74,7 @@ Copies the URL into the kill ring."
       (kill-new (match-string 1)))
    (kill-buffer output)))
 
+;;;###autoload
 (defun gist-region-private (begin end)
   "Post the current region as a new private paste at gist.github.com
 Copies the URL into the kill ring."
@@ -101,18 +103,21 @@ Totally not required."
                  (format "-F 'login=%s' -F 'token=%s'" github-user github-key))))
          "")))
 
+;;;###autoload
 (defun gist-buffer ()
   "Post the current buffer as a new paste at gist.github.com.
 Copies the URL into the kill ring."
   (interactive)
   (gist-region (point-min) (point-max)))
 
+;;;###autoload
 (defun gist-buffer-private ()
   "Post the current buffer as a new private paste at gist.github.com.
 Copies the URL into the kill ring."
   (interactive)
   (gist-region-private (point-min) (point-max)))
 
+;;;###autoload
 (defun gist-region-or-buffer ()
   "Post either the current region, or if mark is not set, the current buffer as a new paste at gist.github.com
 Copies the URL into the kill ring."
@@ -121,6 +126,7 @@ Copies the URL into the kill ring."
       (gist-region (point) (mark))        
       (mark-inactive (gist-buffer))))
 
+;;;###autoload
 (defun gist-region-or-buffer-private ()
   "Post either the current region, or if mark is not set, the current buffer as a new private paste at gist.github.com
 Copies the URL into the kill ring."
@@ -132,6 +138,7 @@ Copies the URL into the kill ring."
 (defvar gist-fetch-url "http://gist.github.com/%d.txt"
   "Raw Gist content URL format")
 
+;;;###autoload
 (defun gist-fetch (id)
   "Fetches a Gist and inserts it into a new buffer
 If the Gist already exists in a buffer, switches to it"
