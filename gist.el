@@ -45,6 +45,9 @@
                                      (tex-mode . "tex")
                                      (xml-mode . "xml")))
 
+(defvar gist-view-gist nil
+  "If non-nil, automatically use `browse-url' to view gists after they're posted.")
+
 ;;;###autoload
 (defun gist-region (begin end &optional private)
   "Post the current region as a new paste at gist.github.com
@@ -71,6 +74,7 @@ Copies the URL into the kill ring."
     (with-current-buffer output
       (re-search-backward "href=\"\\(.*\\)\"")
       (message "Paste created: %s" (match-string 1))
+      (if gist-view-gist (browse-url (match-string 1)))
       (kill-new (match-string 1)))
    (kill-buffer output)))
 
