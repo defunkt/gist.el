@@ -78,8 +78,10 @@
 ;;;###autoload
 (defun gist-region (begin end &optional private)
   "Post the current region as a new paste at gist.github.com
-Copies the URL into the kill ring."
-  (interactive "r")
+Copies the URL into the kill ring.
+
+With a prefix argument, makes a private paste."
+  (interactive "r\nP")
   (let* ((file (or (buffer-file-name) (buffer-name)))
          (name (file-name-nondirectory file))
          (ext (or (cdr (assoc major-mode gist-supported-modes-alist))
@@ -155,11 +157,13 @@ If nothing is found, prompts for the info then sets it to the git config."
       (github-raw-auth-string user token))))
 
 ;;;###autoload
-(defun gist-buffer ()
+(defun gist-buffer (&optional private)
   "Post the current buffer as a new paste at gist.github.com.
-Copies the URL into the kill ring."
-  (interactive)
-  (gist-region (point-min) (point-max)))
+Copies the URL into the kill ring.
+
+With a prefix argument, makes a private paste."
+  (interactive "P")
+  (gist-region (point-min) (point-max) private))
 
 ;;;###autoload
 (defun gist-buffer-private ()
@@ -169,13 +173,15 @@ Copies the URL into the kill ring."
   (gist-region-private (point-min) (point-max)))
 
 ;;;###autoload
-(defun gist-region-or-buffer ()
+(defun gist-region-or-buffer (&optional private)
   "Post either the current region, or if mark is not set, the current buffer as a new paste at gist.github.com
-Copies the URL into the kill ring."
-  (interactive)
+Copies the URL into the kill ring.
+
+With a prefix argument, makes a private paste."
+  (interactive "P")
   (condition-case nil
-      (gist-region (point) (mark))
-      (mark-inactive (gist-buffer))))
+      (gist-region (point) (mark) private)
+      (mark-inactive (gist-buffer private))))
 
 ;;;###autoload
 (defun gist-region-or-buffer-private ()
