@@ -1,16 +1,43 @@
-;; gist.el --- Emacs integration for gist.github.com
-;; Copyright (C) 2008  Christian Neukirchen <purl.org/net/chneukirchen>
-;; Copyright (C) 2008  Chris Wanstrath <chris@ozmm.org>
-;; Copyright (C) 2008  Will Farrington <wcfarrington@gmail.com>
-;; Licensed under the same terms as Emacs.
-
+;;; gist.el --- Emacs integration for gist.github.com
+     
+;; Copyright (C) 2008 Christian Neukirchen <purl.org/net/chneukirchen>
+     
 ;; Version: 0.3.1
-;; 26aug2008  +wfarr+
-;; 25aug2008  +defunkt+
-;; 21jul2008  +chris+
+;; Keywords: gist git github paste pastie pastebin
+;; Created: 21 Jul 2008
+;; Author: Christian Neukirchen <purl.org/net/chneukirchen>
+;; Maintainer: Chris Wanstrath <chris@ozmm.org>
+;; Contributors: 
+;; Will Farrington <wcfarrington@gmail.com>
+;; Michael Ivey
+;; Phil Hagelberg
 
-;; Ideas: fork
+;; This file is NOT part of GNU Emacs.
 
+;; This is free software; you can redistribute it and/or modify it under
+;; the terms of the GNU General Public License as published by the Free
+;; Software Foundation; either version 2, or (at your option) any later
+;; version.
+;;
+;; This is distributed in the hope that it will be useful, but WITHOUT
+;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+;; FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+;; for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+;; MA 02111-1307, USA.
+ 
+
+;;; Commentary:
+ 
+;; Uses your local GitHub config if it can find it.
+;; See http://github.com/blog/180-local-github-config
+
+
+;;; Code:
+ 
 (defvar github-username "")
 (defvar github-api-key "")
 
