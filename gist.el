@@ -1,11 +1,14 @@
-;; Keywords: gist git github paste pastie pastebin
-;; Created: 21 Jul 2008
+;; gist.el --- Emacs integration for gist.github.com
+
 ;; Author: Christian Neukirchen <purl.org/net/chneukirchen>
 ;; Maintainer: Chris Wanstrath <chris@ozmm.org>
 ;; Contributors: 
 ;; Will Farrington <wcfarrington@gmail.com>
 ;; Michael Ivey
 ;; Phil Hagelberg
+;; Version: 0.3
+;; Created: 21 Jul 2008
+;; Keywords: gist git github paste pastie pastebin
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -23,13 +26,11 @@
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
- 
 
 ;;; Commentary:
  
 ;; Uses your local GitHub config if it can find it.
 ;; See http://github.com/blog/180-local-github-config
-
 
 ;;; Code:
  
