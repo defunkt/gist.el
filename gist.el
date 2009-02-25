@@ -2,7 +2,7 @@
 
 ;; Author: Christian Neukirchen <purl.org/net/chneukirchen>
 ;; Maintainer: Chris Wanstrath <chris@ozmm.org>
-;; Contributors: 
+;; Contributors:
 ;; Will Farrington <wcfarrington@gmail.com>
 ;; Michael Ivey
 ;; Phil Hagelberg
@@ -28,12 +28,12 @@
 ;; MA 02111-1307, USA.
 
 ;;; Commentary:
- 
+
 ;; Uses your local GitHub config if it can find it.
 ;; See http://github.com/blog/180-local-github-config
 
 ;;; Code:
- 
+
 (eval-when-compile (require 'cl))
 
 (defvar github-username "")
