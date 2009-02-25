@@ -42,6 +42,7 @@
 (defvar gist-supported-modes-alist '((action-script-mode . "as")
                                      (c-mode . "c")
                                      (c++-mode . "cpp")
+                                     (clojure-mode . "clj")
                                      (common-lisp-mode . "lisp")
                                      (css-mode . "css")
                                      (diff-mode . "diff")
