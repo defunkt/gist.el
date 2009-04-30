@@ -57,7 +57,7 @@
                                      (lua-mode . "lua")
                                      (ocaml-mode . "ml")
                                      (objective-c-mode . "m")
-                                     (perl-mode "pl")
+                                     (perl-mode . "pl")
                                      (php-mode . "php")
                                      (python-mode . "py")
                                      (ruby-mode . "rb")
