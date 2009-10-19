@@ -90,7 +90,7 @@ With a prefix argument, makes a private paste."
            (url-request-method "POST")
            (url-request-data
             (gist-make-query-string
-             `(,@(if private '(("private" . "1")))
+             `(,@(if private '(("action_button" . "private")))
                ("login" . ,login)
                ("token" . ,token)
                ("file_ext[gistfile1]" . ,(concat "." ext))
