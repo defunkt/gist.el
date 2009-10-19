@@ -2,7 +2,7 @@
 
 ;; Author: Christian Neukirchen <purl.org/net/chneukirchen>
 ;; Maintainer: Chris Wanstrath <chris@ozmm.org>
-;; Contributors: 
+;; Contributors:
 ;; Will Farrington <wcfarrington@gmail.com>
 ;; Michael Ivey
 ;; Phil Hagelberg
@@ -28,12 +28,12 @@
 ;; MA 02111-1307, USA.
 
 ;;; Commentary:
- 
+
 ;; Uses your local GitHub config if it can find it.
 ;; See http://github.com/blog/180-local-github-config
 
 ;;; Code:
- 
+
 (eval-when-compile (require 'cl))
 
 (defvar github-username "")
@@ -42,6 +42,7 @@
 (defvar gist-supported-modes-alist '((action-script-mode . "as")
                                      (c-mode . "c")
                                      (c++-mode . "cpp")
+                                     (clojure-mode . "clj")
                                      (common-lisp-mode . "lisp")
                                      (css-mode . "css")
                                      (diff-mode . "diff")
