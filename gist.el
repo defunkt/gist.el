@@ -63,6 +63,7 @@
                                      (python-mode . "py")
                                      (ruby-mode . "rb")
                                      (text-mode . "txt")
+                                     (scala-mode . "scala")
                                      (sql-mode . "sql")
                                      (scheme-mode . "scm")
                                      (smalltalk-mode . "st")
