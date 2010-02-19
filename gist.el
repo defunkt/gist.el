@@ -105,7 +105,7 @@ With a prefix argument, makes a private paste."
   (let ((location (cadr status)))
     (message "Paste created: %s" location)
     (when gist-view-gist 
-      (browse-url (location)))
+      (browse-url location))
     (kill-new location)
     (kill-buffer (current-buffer))))
 
