@@ -98,12 +98,16 @@ With a prefix argument, makes a private paste."
                ("file_ext[gistfile1]" . ,(concat "." ext))
                ("file_name[gistfile1]" . ,name)
                ("file_contents[gistfile1]" . ,(buffer-substring begin end))))))
-      (with-current-buffer (url-retrieve-synchronously "http://gist.github.com/gists")
-        (re-search-backward "^Location: \\(.*\\)$")
-        (message "Paste created: %s" (match-string 1))
-        (if gist-view-gist (browse-url (match-string 1)))
-        (kill-new (match-string 1))
-        (kill-buffer (current-buffer))))))
+      (url-retrieve "http://gist.github.com/gists"
+                    'gist-url-retrieved-callback))))
+
+(defun gist-url-retrieved-callback (status)
+  (let ((location (cadr status)))
+    (message "Paste created: %s" location)
+    (when gist-view-gist 
+      (browse-url (location)))
+    (kill-new location)
+    (kill-buffer (current-buffer))))
 
 (defun gist-make-query-string (params)
   "Returns a query string constructed from PARAMS, which should be
@@ -209,7 +213,7 @@ If the Gist already exists in a buffer, switches to it"
               (url-retrieve-synchronously (format gist-fetch-url id)))
         (with-current-buffer gist-buffer
           (rename-buffer gist-buffer-name t)
-          (beginning-of-buffer)
+          (goto-char (point-min))
           (search-forward-regexp "\n\n")
           (delete-region (point-min) (point))
           (set-buffer-modified-p nil))
