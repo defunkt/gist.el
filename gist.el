@@ -36,8 +36,16 @@
 
 (eval-when-compile (require 'cl))
 
-(defvar github-username "")
-(defvar github-api-key "")
+(defvar github-user nil
+  "If non-nil, will be used as your GitHub username without checking
+git-config(1).")
+(defvar github-token nil
+  "If non-nil, will be used as your GitHub token without checking
+git-config(1).")
+
+(defvar gist-view-gist nil
+  "If non-nil, automatically use `browse-url' to view gists after they're
+posted.")
 
 (defvar gist-supported-modes-alist '((action-script-mode . "as")
                                      (c-mode . "c")
@@ -72,9 +80,6 @@
                                      (tex-mode . "tex")
                                      (xml-mode . "xml")))
 
-(defvar gist-view-gist nil
-  "If non-nil, automatically use `browse-url' to view gists after they're posted.")
-
 ;;;###autoload
 (defun gist-region (begin end &optional private)
   "Post the current region as a new paste at gist.github.com
@@ -104,7 +109,7 @@ With a prefix argument, makes a private paste."
 (defun gist-url-retrieved-callback (status)
   (let ((location (cadr status)))
     (message "Paste created: %s" location)
-    (when gist-view-gist 
+    (when gist-view-gist
       (browse-url location))
     (kill-new location)
     (kill-buffer (current-buffer))))
@@ -145,8 +150,8 @@ and returns (USERNAME . TOKEN). If nothing is found, prompts
 for the info then sets it to the git config."
   (interactive)
 
-  (let* ((user (github-config "user"))
-         (token (github-config "token")))
+  (let* ((user (or github-user (github-config "user")))
+         (token (or github-token (github-config "token"))))
 
     (when (not user)
       (setq user (read-string "GitHub username: "))
