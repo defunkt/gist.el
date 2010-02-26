@@ -81,7 +81,7 @@ posted.")
                                      (xml-mode . "xml")))
 
 ;;;###autoload
-(defun gist-region (begin end &optional private)
+(defun gist-region (begin end &optional private &optional callback)
   "Post the current region as a new paste at gist.github.com
 Copies the URL into the kill ring.
 
@@ -92,19 +92,18 @@ With a prefix argument, makes a private paste."
            (name (file-name-nondirectory file))
            (ext (or (cdr (assoc major-mode gist-supported-modes-alist))
                     (file-name-extension file)
-                    "txt"))
-           (url-max-redirections 0)
-           (url-request-method "POST")
-           (url-request-data
-            (gist-make-query-string
-             `(,@(if private '(("action_button" . "private")))
-               ("login" . ,login)
-               ("token" . ,token)
-               ("file_ext[gistfile1]" . ,(concat "." ext))
-               ("file_name[gistfile1]" . ,name)
-               ("file_contents[gistfile1]" . ,(buffer-substring begin end))))))
+                    "txt")))
+      (setq url-max-redirections 0)
+      (setq url-request-method "POST")
+      (setq url-request-data (gist-make-query-string
+                              `(,@(if private '(("action_button" . "private")))
+                                ("login" . ,login)
+                                ("token" . ,token)
+                                ("file_ext[gistfile1]" . ,(concat "." ext))
+                                ("file_name[gistfile1]" . ,name)
+                                ("file_contents[gistfile1]" . ,(buffer-substring begin end)))))
       (url-retrieve "http://gist.github.com/gists"
-                    'gist-url-retrieved-callback))))
+                    (or callback 'gist-url-retrieved-callback)))))
 
 (defun gist-url-retrieved-callback (status)
   (let ((location (cadr status)))
