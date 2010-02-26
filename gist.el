@@ -93,7 +93,7 @@ With a prefix argument, makes a private paste."
            (ext (or (cdr (assoc major-mode gist-supported-modes-alist))
                     (file-name-extension file)
                     "txt")))
-      (setq url-max-redirections 0)
+      (setq url-max-redirections 5)
       (setq url-request-method "POST")
       (setq url-request-data (gist-make-query-string
                               `(,@(if private '(("action_button" . "private")))
