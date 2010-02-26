@@ -92,16 +92,16 @@ With a prefix argument, makes a private paste."
            (name (file-name-nondirectory file))
            (ext (or (cdr (assoc major-mode gist-supported-modes-alist))
                     (file-name-extension file)
-                    "txt")))
-      (setq url-max-redirections 5)
-      (setq url-request-method "POST")
-      (setq url-request-data (gist-make-query-string
-                              `(,@(if private '(("action_button" . "private")))
-                                ("login" . ,login)
-                                ("token" . ,token)
-                                ("file_ext[gistfile1]" . ,(concat "." ext))
-                                ("file_name[gistfile1]" . ,name)
-                                ("file_contents[gistfile1]" . ,(buffer-substring begin end)))))
+                    "txt"))
+           (url-max-redirections 5)
+           (url-request-method "POST")
+           (url-request-data (gist-make-query-string
+                               `(,@(if private '(("action_button" . "private")))
+                                 ("login" . ,login)
+                                 ("token" . ,token)
+                                 ("file_ext[gistfile1]" . ,(concat "." ext))
+                                 ("file_name[gistfile1]" . ,name)
+                                 ("file_contents[gistfile1]" . ,(buffer-substring begin end))))))
       (url-retrieve "http://gist.github.com/gists"
                     (or callback 'gist-url-retrieved-callback)))))
 
