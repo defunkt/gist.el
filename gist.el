@@ -301,12 +301,13 @@ for the gist."
     (car (xml-node-children (assq sym children)))))
 
 (defun gist-xml-cleanup (xml-list)
-  "Remove empty strings or whitespace nodes from the `xml-list'.
+  "Removes empty strings or whitespace nodes from the `xml-list'.
 Borrowed from rss.el."
   (mapcar 'gist-xml-cleanup-node xml-list))
 
 (defun gist-xml-cleanup-node (node)
-  "Recursively Removes whitespace and empty strings from the given xml `node'."
+  "Recursively removes whitespace and empty strings from the given xml `node'.
+Borrowed from rss.el."
   (apply 'list
          (xml-node-name node)
          (xml-node-attributes node)
