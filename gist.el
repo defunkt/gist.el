@@ -36,8 +36,16 @@
 
 (eval-when-compile (require 'cl))
 
-(defvar github-username "")
-(defvar github-api-key "")
+(defvar github-user nil
+  "If non-nil, will be used as your GitHub username without checking
+git-config(1).")
+(defvar github-token nil
+  "If non-nil, will be used as your GitHub token without checking
+git-config(1).")
+
+(defvar gist-view-gist nil
+  "If non-nil, automatically use `browse-url' to view gists after they're
+posted.")
 
 (defvar gist-supported-modes-alist '((action-script-mode . "as")
                                      (c-mode . "c")
@@ -72,11 +80,8 @@
                                      (tex-mode . "tex")
                                      (xml-mode . "xml")))
 
-(defvar gist-view-gist nil
-  "If non-nil, automatically use `browse-url' to view gists after they're posted.")
-
 ;;;###autoload
-(defun gist-region (begin end &optional private)
+(defun gist-region (begin end &optional private &optional callback)
   "Post the current region as a new paste at gist.github.com
 Copies the URL into the kill ring.
 
@@ -88,23 +93,23 @@ With a prefix argument, makes a private paste."
            (ext (or (cdr (assoc major-mode gist-supported-modes-alist))
                     (file-name-extension file)
                     "txt"))
-           (url-max-redirections 0)
+           (url-max-redirections 5)
            (url-request-method "POST")
-           (url-request-data
-            (gist-make-query-string
-             `(,@(if private '(("action_button" . "private")))
-               ("login" . ,login)
-               ("token" . ,token)
-               ("file_ext[gistfile1]" . ,(concat "." ext))
-               ("file_name[gistfile1]" . ,name)
-               ("file_contents[gistfile1]" . ,(buffer-substring begin end))))))
+           (url-request-data (gist-make-query-string
+                               `(,@(if private '(("action_button" . "private")))
+                                 ("login" . ,login)
+                                 ("token" . ,token)
+                                 ("file_ext[gistfile1]" . ,(concat "." ext))
+                                 ("file_name[gistfile1]" . ,name)
+                                 ("file_contents[gistfile1]" . ,(buffer-substring begin end))))))
       (url-retrieve "http://gist.github.com/gists"
-                    'gist-url-retrieved-callback))))
+                    (or callback 'gist-url-retrieved-callback)))))
+
 
 (defun gist-url-retrieved-callback (status)
   (let ((location (cadr status)))
     (message "Paste created: %s" location)
-    (when gist-view-gist 
+    (when gist-view-gist
       (browse-url location))
     (kill-new location)
     (kill-buffer (current-buffer))))
@@ -145,8 +150,8 @@ and returns (USERNAME . TOKEN). If nothing is found, prompts
 for the info then sets it to the git config."
   (interactive)
 
-  (let* ((user (github-config "user"))
-         (token (github-config "token")))
+  (let* ((user (or github-user (github-config "user")))
+         (token (or github-token (github-config "token"))))
 
     (when (not user)
       (setq user (read-string "GitHub username: "))
