@@ -6,7 +6,8 @@
 ;; Will Farrington <wcfarrington@gmail.com>
 ;; Michael Ivey
 ;; Phil Hagelberg
-;; Version: 0.3
+;; Dan McKinley
+;; Version: 0.4
 ;; Created: 21 Jul 2008
 ;; Keywords: gist git github paste pastie pastebin
 
@@ -84,11 +85,11 @@ posted.")
 
 
 (defun* gist-request (url callback &optional params)
-  "Makes a request to `url' asynchronously, notifying `callback' when 
+  "Makes a request to `url' asynchronously, notifying `callback' when
 complete. The github parameters are included in the request. Optionally
 accepts additional POST `params' as a list of (key . value) conses."
   (github-with-auth-info login token
-    (let ((url-request-data (gist-make-query-string 
+    (let ((url-request-data (gist-make-query-string
                              `(("login" . ,login)
                                ("token" . ,token) ,@params)))
           (url-max-redirecton 5)
@@ -107,7 +108,7 @@ With a prefix argument, makes a private paste."
          (ext (or (cdr (assoc major-mode gist-supported-modes-alist))
                   (file-name-extension file)
                   "txt")))
-    (gist-request 
+    (gist-request
      "http://gist.github.com/gists"
      (or callback 'gist-created-callback)
      `(,@(if private '(("action_button" . "private")))
@@ -152,7 +153,7 @@ Copies the URL into the kill ring."
 (defun github-set-config (key value)
   "Sets a GitHub specific value to the global Git config."
   (let ((git (executable-find "git")))
-    (shell-command-to-string 
+    (shell-command-to-string
      (format git " config --global github.%s %s" key value))))
 
 (defun github-auth-info ()
@@ -163,13 +164,13 @@ for the info then sets it to the git config."
   (interactive)
 
   ;; If we've been called within a scope that already has this
-  ;; defined, don't take the time to get it again. 
+  ;; defined, don't take the time to get it again.
   (if (boundp '*github-auth-info*)
       *github-auth-info*
 
     (let* ((user (or github-user (github-config "user")))
            (token (or github-token (github-config "token"))))
-      
+
       (when (not user)
         (setq user (read-string "GitHub username: "))
         (github-set-config "user" user))
@@ -181,7 +182,7 @@ for the info then sets it to the git config."
       (cons user token))))
 
 (defmacro github-with-auth-info (login token &rest body)
-  "Binds the github authentication credentials to `login' and `token'. 
+  "Binds the github authentication credentials to `login' and `token'.
 The credentials are retrieved at most once within the body of this macro."
   (declare (indent 2))
   `(let ((*github-auth-info* (github-auth-info)))
@@ -232,11 +233,11 @@ Copies the URL into the kill ring."
   "Displays a list of all of the current user's gists in a new buffer."
   (interactive)
   (message "Retrieving list of your gists...")
-  (github-with-auth-info login token 
-    (gist-request 
+  (github-with-auth-info login token
+    (gist-request
      (format "http://gist.github.com/api/v1/xml/gists/%s" login)
-     'gist-lists-retrieved-callback))) 
-                         
+     'gist-lists-retrieved-callback)))
+
 (defun gist-lists-retrieved-callback (status)
   "Called when the list of gists has been retrieved. Parses the result
 and displays the list."
@@ -251,7 +252,7 @@ and displays the list."
         (kill-region (point-min) (point-max))
         (gist-insert-list-header)
         (mapc 'gist-insert-gist-link (xml-node-children (car gists)))
-        
+
         ;; remove the extra newline at the end
         (delete-backward-char 1))
 
@@ -268,14 +269,14 @@ and displays the list."
   (let ((ov (make-overlay (line-beginning-position) (line-end-position))))
     (overlay-put ov 'face 'header-line))
   (forward-line))
-  
+
 (defun gist-insert-gist-link (gist)
   "Inserts a button that will open the given gist when pressed."
   (let* ((data (gist-parse-gist gist))
          (repo (string-to-number (car data))))
     (mapc '(lambda (x) (insert (format "  %s    " x))) data)
     (make-text-button (line-beginning-position) (line-end-position)
-                      'repo repo 
+                      'repo repo
                       'action 'gist-fetch-button
                       'face 'default))
   (insert "\n"))
@@ -285,7 +286,7 @@ and displays the list."
   (gist-fetch (button-get button 'repo)))
 
 (defun gist-parse-gist (gist)
-  "Returns a list of the gist's attributes for display, given the xml list 
+  "Returns a list of the gist's attributes for display, given the xml list
 for the gist."
   (let ((repo (gist-child-text 'repo gist))
         (created-at (gist-child-text 'created-at gist))
