@@ -18,6 +18,9 @@ In your emacs config:
 Functions
 =========
 
+    gist-list - Lists your gists in a new buffer. Use arrow keys
+    to browse, RET to open one in the other buffer.
+
     gist-region - Copies Gist URL into the kill ring.
     With a prefix argument, makes a private gist.
 
