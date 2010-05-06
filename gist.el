@@ -92,7 +92,7 @@ accepts additional POST `params' as a list of (key . value) conses."
     (let ((url-request-data (gist-make-query-string
                              `(("login" . ,login)
                                ("token" . ,token) ,@params)))
-          (url-max-redirecton 5)
+          (url-max-redirecton -1)
           (url-request-method "POST"))
       (url-retrieve url callback))))
 
