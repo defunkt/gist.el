@@ -84,6 +84,14 @@ posted.")
 
 
 
+(defmacro github-with-auth-info (login token &rest body)
+  "Binds the github authentication credentials to `login' and `token'.
+The credentials are retrieved at most once within the body of this macro."
+  (declare (indent 2))
+  `(let ((*github-auth-info* (github-auth-info)))
+     (destructuring-bind (,login . ,token) *github-auth-info*
+       ,@body)))
+
 (defun* gist-request (url callback &optional params)
   "Makes a request to `url' asynchronously, notifying `callback' when
 complete. The github parameters are included in the request. Optionally
@@ -180,14 +188,6 @@ for the info then sets it to the git config."
         (github-set-config "token" token))
 
       (cons user token))))
-
-(defmacro github-with-auth-info (login token &rest body)
-  "Binds the github authentication credentials to `login' and `token'.
-The credentials are retrieved at most once within the body of this macro."
-  (declare (indent 2))
-  `(let ((*github-auth-info* (github-auth-info)))
-     (destructuring-bind (,login . ,token) *github-auth-info*
-       ,@body)))
 
 ;;;###autoload
 (defun gist-buffer (&optional private)
