@@ -247,6 +247,7 @@ and displays the list."
                      (xml-parse-region (match-beginning 0) (point-max)))))
     (kill-buffer (current-buffer))
     (with-current-buffer (get-buffer-create "*gists*")
+      (toggle-read-only -1)
       (goto-char (point-min))
       (save-excursion
         (kill-region (point-min) (point-max))
