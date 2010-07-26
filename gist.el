@@ -7,7 +7,7 @@
 ;; Michael Ivey
 ;; Phil Hagelberg
 ;; Dan McKinley
-;; Version: 0.4
+;; Version: 0.5
 ;; Created: 21 Jul 2008
 ;; Keywords: gist git github paste pastie pastebin
 
