@@ -122,12 +122,12 @@ accepts additional POST `params' as a list of (key . value) conses."
                        nil
                        (gist-temp-buffer)
                        nil
-                      "--silent"
+                       url
+                       "--silent"
                        (if (string= url-request-method "POST")
                            "--data"
                          "--header")
-                       url-request-data
-                       url)
+                       (if url-request-data url-request-data ""))
          (set-buffer gist-temp-bufname)
          (if callback
              (funcall callback))))
