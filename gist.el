@@ -55,6 +55,11 @@ posted.")
 (defvar gist-use-curl nil
   "Set gist.el to use curl by default.")
 
+(defvar gist-temp-bufname "*gist temp*")
+
+(defun gist-temp-buffer ()
+  (get-buffer-create gist-temp-bufname))
+
 (defvar gist-supported-modes-alist '((action-script-mode . "as")
                                      (c-mode . "c")
                                      (c++-mode . "cpp")
@@ -109,10 +114,10 @@ accepts additional POST `params' as a list of (key . value) conses."
           (url-max-redirecton -1)
           (url-request-method "POST"))
       (if gist-use-curl
-          (gist-curl-retrieve url callback)
+          (gist-curl-retrieve url callback url-request-method url-request-data)
         (url-retrieve url callback)))))
 
-(defun gist-curl-retrieve (url &optional callback)
+(defun gist-curl-retrieve (url &optional callback url-request-method url-request-data)
   (progn (call-process "curl"
                        nil
                        (gist-temp-buffer)
@@ -215,11 +220,6 @@ for the info then sets it to the git config."
       (cons user token))))
 
 ;;;###autoload
-(defvar gist-temp-bufname "*gist temp*")
-
-(defun gist-temp-buffer ()
-  (get-buffer-create gist-temp-bufname))
-
 (defun gist-buffer (&optional private)
   "Post the current buffer as a new paste at gist.github.com.
 Copies the URL into the kill ring.
