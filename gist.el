@@ -29,6 +29,9 @@
 ;; MA 02111-1307, USA.
 
 ;;; Commentary:
+;;  to function with https you may need to use curl
+;;  by setting the option below
+;; (setq gist-use-curl t)
 
 ;; Uses your local GitHub config if it can find it.
 ;; See http://github.com/blog/180-local-github-config
@@ -48,6 +51,9 @@ git-config(1).")
 (defvar gist-view-gist nil
   "If non-nil, automatically use `browse-url' to view gists after they're
 posted.")
+
+(defvar gist-use-curl nil
+  "Set gist.el to use curl by default.")
 
 (defvar gist-supported-modes-alist '((action-script-mode . "as")
                                      (c-mode . "c")
@@ -102,7 +108,24 @@ accepts additional POST `params' as a list of (key . value) conses."
                                ("token" . ,token) ,@params)))
           (url-max-redirecton -1)
           (url-request-method "POST"))
-      (url-retrieve url callback))))
+      (if gist-use-curl
+          (gist-curl-retrieve url callback)
+        (url-retrieve url callback)))))
+
+(defun gist-curl-retrieve (url &optional callback)
+  (progn (call-process "curl"
+                       nil
+                       (gist-temp-buffer)
+                       nil
+                      "--silent"
+                       (if (string= url-request-method "POST")
+                           "--data"
+                         "--header")
+                       url-request-data
+                       url)
+         (set-buffer gist-temp-bufname)
+         (if callback
+             (funcall callback))))
 
 ;;;###autoload
 (defun gist-region (begin end &optional private &optional callback)
@@ -117,15 +140,17 @@ With a prefix argument, makes a private paste."
                   (file-name-extension file)
                   "txt")))
     (gist-request
-     "http://gist.github.com/gists"
+     "https://gist.github.com/gists"
      (or callback 'gist-created-callback)
      `(,@(if private '(("action_button" . "private")))
        ("file_ext[gistfile1]" . ,(concat "." ext))
        ("file_name[gistfile1]" . ,name)
        ("file_contents[gistfile1]" . ,(buffer-substring begin end))))))
 
-(defun gist-created-callback (status)
-  (let ((location (cadr status)))
+(defun gist-created-callback (&optional status)
+  (goto-char (point-min))
+  (re-search-forward"<a href=\"\\([^\"]*\\)\">redirected" nil t nil)
+  (let ((location (if status (cadr status) (match-string 1))))
     (message "Paste created: %s" location)
     (when gist-view-gist
       (browse-url location))
@@ -190,6 +215,11 @@ for the info then sets it to the git config."
       (cons user token))))
 
 ;;;###autoload
+(defvar gist-temp-bufname "*gist temp*")
+
+(defun gist-temp-buffer ()
+  (get-buffer-create gist-temp-bufname))
+
 (defun gist-buffer (&optional private)
   "Post the current buffer as a new paste at gist.github.com.
 Copies the URL into the kill ring.
@@ -225,7 +255,7 @@ Copies the URL into the kill ring."
       (gist-region-private (point) (mark))
       (mark-inactive (gist-buffer-private))))
 
-(defvar gist-fetch-url "http://gist.github.com/%d.txt"
+(defvar gist-fetch-url "https://gist.github.com/%d.txt"
   "Raw Gist content URL format")
 
 ;;;###autoload
@@ -235,10 +265,10 @@ Copies the URL into the kill ring."
   (message "Retrieving list of your gists...")
   (github-with-auth-info login token
     (gist-request
-     (format "http://gist.github.com/api/v1/xml/gists/%s" login)
+     (format "https://gist.github.com/api/v1/xml/gists/%s" login)
      'gist-lists-retrieved-callback)))
 
-(defun gist-lists-retrieved-callback (status)
+(defun gist-lists-retrieved-callback ()
   "Called when the list of gists has been retrieved. Parses the result
 and displays the list."
   (goto-char (point-min))
@@ -328,17 +358,21 @@ If the Gist already exists in a buffer, switches to it"
   (interactive "nGist ID: ")
 
   (let* ((gist-buffer-name (format "*gist %d*" id))
+         (gist-url (format gist-fetch-url id))
          (gist-buffer (get-buffer gist-buffer-name)))
     (if (bufferp gist-buffer)
       (switch-to-buffer-other-window gist-buffer)
       (progn
         (message "Fetching Gist %d..." id)
-        (setq gist-buffer
-              (url-retrieve-synchronously (format gist-fetch-url id)))
+        (if gist-use-curl
+            (progn
+              (gist-curl-retrieve gist-url)
+              (setq gist-buffer (gist-temp-buffer)))
+          (setq gist-buffer (url-retrieve-synchronously gist-url)))
         (with-current-buffer gist-buffer
           (rename-buffer gist-buffer-name t)
           (goto-char (point-min))
-          (search-forward-regexp "\n\n")
+          (search-forward-regexp "\n\n" nil t)
           (delete-region (point-min) (point))
           (set-buffer-modified-p nil))
         (switch-to-buffer-other-window gist-buffer)))))
