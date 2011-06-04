@@ -1,3 +1,6 @@
+WARNING: this is an experimental version of gist.el that relies on the gh.el
+library. See https://github.com/sigma/gh.el
+
 gist.el -- Emacs integration for gist.github.com
 ================================================
 
@@ -44,11 +47,6 @@ Config
 
 Set `gist-view-gist` to non-nil if you want to view your Gist using
 `browse-url` after it is created.
-
-Set `github-user` and `github-token` to your GitHub credentials to
-avoid checking `git-config`.
-
-See <http://github.com/blog/180-local-github-config>
 
 Meta
 ====
