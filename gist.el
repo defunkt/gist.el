@@ -162,33 +162,20 @@ Copies the URL into the kill ring."
       (gh-api-add-response-callback 
        resp 'gist-lists-retrieved-callback))))
 
+(defun gist-tabulated-entry (gist)
+  (let* ((data (gist-parse-gist gist))
+         (repo (car data)))
+    (list repo (apply 'vector data))))
+
 (defun gist-lists-retrieved-callback (gists)
   "Called when the list of gists has been retrieved. Displays
 the list."
   (with-current-buffer (get-buffer-create "*gists*")
-    (toggle-read-only -1)
-    (goto-char (point-min))
-    (save-excursion
-      (kill-region (point-min) (point-max))
-      (gist-insert-list-header)
-      (mapc 'gist-insert-gist-link gists)
-
-      ;; remove the extra newline at the end
-      ;; (delete-backward-char 1))
-
-    ;; skip header
-    (forward-line)
-    (toggle-read-only t)
-    (set-window-buffer nil (current-buffer)))))
-
-(defun gist-insert-list-header ()
-  "Creates the header line in the gist list buffer."
-  (save-excursion
-    (insert "  ID          Created                  "
-            "Visibility  Description \n"))
-  (let ((ov (make-overlay (line-beginning-position) (line-end-position))))
-    (overlay-put ov 'face 'header-line))
-  (forward-line))
+    (gist-list-mode)
+    (setq tabulated-list-entries
+          (mapcar 'gist-tabulated-entry gists))
+    (tabulated-list-print)
+    (set-window-buffer nil (current-buffer))))
 
 (defun gist-insert-gist-link (gist)
   "Inserts a button that will open the given gist when pressed."
@@ -242,6 +229,29 @@ If the Gist already exists in a buffer, switches to it"
             (funcall mode))
           (set-buffer-modified-p nil))
         (switch-to-buffer-other-window gist-buffer)))))
+
+(defun gist-fetch-current ()
+  (interactive)
+  (gist-fetch (tabulated-list-get-id)))
+
+(defvar gist-list-menu-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map tabulated-list-mode-map)
+    (define-key map "\C-m" 'gist-fetch-current)
+    map))
+
+(define-derived-mode gist-list-mode tabulated-list-mode "Gist Menu"
+  "Major mode for browsing gists.
+\\<gist-list-menu-mode-map>
+\\{gist-list-menu-mode-map}"
+  (setq tabulated-list-format [("Id" 9 nil)
+                               ("Created" 20 nil)
+                               ("Visibility" 10 nil)
+                               ("Description" 0 nil)]
+        tabulated-list-padding 2
+        tabulated-list-sort-key nil)
+  (tabulated-list-init-header)
+  (use-local-map gist-list-menu-mode-map))
 
 (provide 'gist)
 ;;; gist.el ends here.
