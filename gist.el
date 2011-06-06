@@ -172,6 +172,10 @@ Copies the URL into the kill ring."
              resp 'gist-lists-retrieved-callback))))
     (gist-list-cache-render gist-list-cache-db)))
 
+(defun gist-list-reload ()
+  (interactive)
+  (gist-list t))
+
 (defun gist-tabulated-entry (gist)
   (let* ((data (gist-parse-gist gist))
          (repo (car data)))
@@ -227,6 +231,7 @@ If the Gist already exists in a buffer, switches to it"
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map tabulated-list-mode-map)
     (define-key map "\C-m" 'gist-fetch-current)
+    (define-key map "g" 'gist-list-reload)
     map))
 
 (define-derived-mode gist-list-mode tabulated-list-mode "Gist Menu"
