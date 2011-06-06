@@ -177,22 +177,6 @@ the list."
     (tabulated-list-print)
     (set-window-buffer nil (current-buffer))))
 
-(defun gist-insert-gist-link (gist)
-  "Inserts a button that will open the given gist when pressed."
-  (let* ((data (gist-parse-gist gist))
-         (repo (car data)))
-    (setcar data (format "%6.6s" repo))
-    (mapc '(lambda (x) (insert (format "  %s    " x))) data)
-    (make-text-button (line-beginning-position) (line-end-position)
-                      'repo repo
-                      'action 'gist-fetch-button
-                      'face 'default))
-  (insert "\n"))
-
-(defun gist-fetch-button (button)
-  "Called when a gist button has been pressed. Fetches and displays the gist."
-  (gist-fetch (button-get button 'repo)))
-
 (defun gist-parse-gist (gist)
   "Returns a list of the gist's attributes for display, given the xml list
 for the gist."
@@ -208,7 +192,7 @@ for the gist."
 (defun gist-fetch (id)
   "Fetches a Gist and inserts it into a new buffer
 If the Gist already exists in a buffer, switches to it"
-  (interactive "nGist ID: ")
+  (interactive "sGist ID: ")
 
   (let* ((gist-buffer-name (format "*gist %s*" id))
          (gist-buffer (get-buffer gist-buffer-name)))
