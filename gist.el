@@ -39,6 +39,8 @@
 
 ;;; Code:
 
+(require 'eieio)
+(require 'eieio-base)
 (require 'gh-gist)
 
 (defvar gist-view-gist nil
@@ -153,14 +155,21 @@ Copies the URL into the kill ring."
       (mark-inactive (gist-buffer-private))))
 
 ;;;###autoload
-(defun gist-list ()
+(defun gist-list (&optional force-reload)
   "Displays a list of all of the current user's gists in a new buffer."
-  (interactive)
-  (message "Retrieving list of your gists...")
-  (let ((api (gh-gist-api "api" :sync nil)))
-    (let ((resp (gh-gist-list api)))
-      (gh-api-add-response-callback 
-       resp 'gist-lists-retrieved-callback))))
+  (interactive "P")
+  (when (or force-reload
+            (> (float-time (current-time))
+               (+ (oref gist-list-cache-db :timestamp) gist-list-cache-timeout)))
+    (gist-list-cache-invalidate gist-list-cache-db))
+  (if (not (oref gist-list-cache-db :gists))
+      (progn
+        (message "Retrieving list of your gists...")
+        (let ((api (gh-gist-api "api" :sync nil)))
+          (let ((resp (gh-gist-list api)))
+            (gh-api-add-response-callback 
+             resp 'gist-lists-retrieved-callback))))
+    (gist-list-cache-render gist-list-cache-db)))
 
 (defun gist-tabulated-entry (gist)
   (let* ((data (gist-parse-gist gist))
@@ -170,12 +179,8 @@ Copies the URL into the kill ring."
 (defun gist-lists-retrieved-callback (gists)
   "Called when the list of gists has been retrieved. Displays
 the list."
-  (with-current-buffer (get-buffer-create "*gists*")
-    (gist-list-mode)
-    (setq tabulated-list-entries
-          (mapcar 'gist-tabulated-entry gists))
-    (tabulated-list-print)
-    (set-window-buffer nil (current-buffer))))
+  (gist-list-cache-update gist-list-cache-db gists)
+  (gist-list-cache-render gist-list-cache-db))
 
 (defun gist-parse-gist (gist)
   "Returns a list of the gist's attributes for display, given the xml list
@@ -193,7 +198,6 @@ for the gist."
   "Fetches a Gist and inserts it into a new buffer
 If the Gist already exists in a buffer, switches to it"
   (interactive "sGist ID: ")
-
   (let* ((gist-buffer-name (format "*gist %s*" id))
          (gist-buffer (get-buffer gist-buffer-name)))
     (if (bufferp gist-buffer)
@@ -236,6 +240,49 @@ If the Gist already exists in a buffer, switches to it"
         tabulated-list-sort-key nil)
   (tabulated-list-init-header)
   (use-local-map gist-list-menu-mode-map))
+
+(defclass gist-list-cache (eieio-persistent)
+  ((version :initarg :version 
+            :initform 0.1
+            :type float)
+   (timestamp :initarg :timestamp
+              :initform (float-time (current-time))
+              :type float)
+   (gists :initarg :gists
+          :initform nil
+          :type list)))
+
+(defvar gist-list-cache-file
+  (concat user-emacs-directory "var/gists.eieio"))
+
+(defun gist-list-cache-load ()
+  (condition-case nil
+      (eieio-persistent-read gist-list-cache-file)
+    (error (gist-list-cache "Gists" :file gist-list-cache-file))))
+
+(defun gist-list-cache-save ()
+  (eieio-persistent-save gist-list-cache-db))
+
+(defvar gist-list-cache-db (gist-list-cache-load))
+
+(defvar gist-list-cache-timeout 600)
+
+(defmethod gist-list-cache-render ((cache gist-list-cache))
+  (let ((gists (oref cache :gists)))
+    (with-current-buffer (get-buffer-create "*gists*")
+      (gist-list-mode)
+      (setq tabulated-list-entries
+            (mapcar 'gist-tabulated-entry gists))
+      (tabulated-list-print)
+      (set-window-buffer nil (current-buffer)))))
+
+(defmethod gist-list-cache-invalidate ((cache gist-list-cache))
+  (oset cache :gists nil))
+
+(defmethod gist-list-cache-update ((cache gist-list-cache) gists)
+  (oset cache :gists gists)
+  (oset cache :timestamp (float-time (current-time)))
+  (gist-list-cache-save))
 
 (provide 'gist)
 ;;; gist.el ends here.
