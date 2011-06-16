@@ -38,6 +38,10 @@
 ;; THIS IS AN EXPERIMENTAL VERSION BASED ON gh.el LIBRARY
 ;; see https://github.com/sigma/gh.el
 
+;;; Todo:
+;;; - fix handling of multi-files gists
+;;; - ease gist interaction with a minor mode
+
 ;;; Code:
 
 (require 'eieio)
@@ -238,7 +242,7 @@ If the Gist already exists in a buffer, switches to it"
   "Major mode for browsing gists.
 \\<gist-list-menu-mode-map>
 \\{gist-list-menu-mode-map}"
-  (setq tabulated-list-format [("Id" 9 nil)
+  (setq tabulated-list-format [("Id" 10 nil)
                                ("Created" 20 nil)
                                ("Visibility" 10 nil)
                                ("Description" 0 nil)]
@@ -280,8 +284,23 @@ If the Gist already exists in a buffer, switches to it"
       (setq tabulated-list-entries
             (mapcar 'gist-tabulated-entry gists))
       (tabulated-list-print)
+      (gist-list-cache-tag-multi-files cache)
       (set-window-buffer nil (current-buffer)))))
 
+(defmethod gist-list-cache-tag-multi-files ((cache gist-list-cache))
+  (let ((ids nil))
+    (let ((gists (oref cache :gists)))
+      (dolist (gist gists)
+        (when (< 1 (length (oref gist :files)))
+          (push (oref gist :id) ids))))
+    (save-excursion
+      (goto-char (point-min))
+      (forward-line 2)
+      (while (not (eobp))
+        (if (member (tabulated-list-get-id) ids) 
+            (tabulated-list-put-tag "+" t)
+          (forward-line 1))))))
+ 
 (defmethod gist-list-cache-invalidate ((cache gist-list-cache))
   (oset cache :gists nil))
 
