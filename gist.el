@@ -11,7 +11,7 @@
 ;; Version: 0.5
 ;; Created: 21 Jul 2008
 ;; Keywords: gist git github paste pastie pastebin
-;; Package-Requires: ((gh "0.1"))
+;; Package-Requires: ((gh "0.2"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -40,6 +40,7 @@
 
 ;;; Todo:
 ;;; - ease gist interaction with a minor mode
+;;; - integrate dired for multi-files gists
 
 ;;; Code:
 
