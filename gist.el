@@ -230,6 +230,10 @@ for the gist."
             (insert (oref f :content))
             (when (fboundp mode)
               (funcall mode))
+            ;; set minor mode
+            (gist-mode 1)
+            (setq gist-id id
+                  gist-filename (oref f :filename))
             (set-buffer-modified-p nil))
           (setq result buffer))))
     (if multi
@@ -324,6 +328,15 @@ for the gist."
   (oset cache :gists gists)
   (oset cache :timestamp (float-time (current-time)))
   (gist-list-cache-save))
+
+(defvar gist-id nil)
+(defvar gist-filename nil)
+
+(define-minor-mode gist-mode
+  "Minor mode for buffers containing gists files"
+  :lighter " gist"
+  (make-local-variable 'gist-id)
+  (make-local-variable 'gist-filename))
 
 (provide 'gist)
 ;;; gist.el ends here.
