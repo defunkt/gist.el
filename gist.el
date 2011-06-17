@@ -39,7 +39,6 @@
 ;; see https://github.com/sigma/gh.el
 
 ;;; Todo:
-;;; - fix handling of multi-files gists
 ;;; - ease gist interaction with a minor mode
 
 ;;; Code:
@@ -204,28 +203,45 @@ for the gist."
 
 ;;;###autoload
 (defun gist-fetch (id)
-  "Fetches a Gist and inserts it into a new buffer
-If the Gist already exists in a buffer, switches to it"
   (interactive "sGist ID: ")
-  (let* ((gist-buffer-name (format "*gist %s*" id))
-         (gist-buffer (get-buffer gist-buffer-name)))
-    (if (bufferp gist-buffer)
-        (switch-to-buffer-other-window gist-buffer)
-      (message "Fetching Gist %s..." id)
-      (let* ((gist-buffer (get-buffer-create gist-buffer-name))
-             (api (gh-gist-api "api" :sync t))
-             (gist (oref (gh-gist-get api id) :data))
-             ;; TODO fix this, as it's obviously broken for multi-files gist
-             (file (car (oref gist :files)))
-             (mode (car (rassoc (file-name-extension (oref file :filename))
-                                gist-supported-modes-alist))))
-        (with-current-buffer gist-buffer
-          (delete-region (point-min) (point-max))
-          (insert (oref file :content))
-          (when (fboundp mode)
-            (funcall mode))
-          (set-buffer-modified-p nil))
-        (switch-to-buffer-other-window gist-buffer)))))
+  (let ((gist nil)
+        (multi nil)
+        (prefix (format "*gist %s*" id))
+        (result nil))
+    (dolist (g (oref gist-list-cache-db :gists))
+      (when (string= (oref g :id) id)
+        (setq gist g)))
+    (let ((api (gh-gist-api "api" :sync t)))
+      (cond ((null gist)
+             ;; fetch it
+             (setq gist (oref (gh-gist-get api id) :data))
+             (object-add-to-list gist-list-cache-db :gists gist)) 
+            ((not (gh-gist-gist-has-files gist))
+             (gh-gist-get api gist))))
+    (let ((files (oref gist :files)))
+      (setq multi (< 1 (length files)))
+      (dolist (f files)
+        (let ((buffer (get-buffer-create (format "%s/%s" prefix
+                                                 (oref f :filename))))
+              (mode (car (rassoc (file-name-extension (oref f :filename))
+                                 gist-supported-modes-alist))))
+          (with-current-buffer buffer
+            (delete-region (point-min) (point-max))
+            (insert (oref f :content))
+            (when (fboundp mode)
+              (funcall mode))
+            (set-buffer-modified-p nil))
+          (setq result buffer))))
+    (if multi
+        (let ((ibuffer-mode-hook nil)
+              (ibuffer-use-header-line nil)
+              (ibuffer-show-empty-filter-groups nil)) 
+          (ibuffer t prefix
+                   `((name . ,(regexp-quote (concat prefix "/"))))
+                   nil nil
+                   nil 
+                   '((name))))
+      (switch-to-buffer-other-window result))))
 
 (defun gist-fetch-current ()
   (interactive)
