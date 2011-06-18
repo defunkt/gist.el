@@ -85,6 +85,15 @@ they're posted.")
                                      (tex-mode . "tex")
                                      (xml-mode . "xml")))
 
+(defun gist-internal (files &optional private description callback)
+  (let* ((api (gh-gist-api "api" :sync nil))
+         (gist (gh-gist-gist "gist" 
+                             :public (not private)
+                             :description (or description "")
+                             :files files))
+         (resp (gh-gist-new api gist)))
+    (gh-api-add-response-callback resp (or callback 'gist-created-callback))))
+
 ;;;###autoload
 (defun gist-region (begin end &optional private callback)
   "Post the current region as a new paste at gist.github.com
@@ -97,17 +106,21 @@ With a prefix argument, makes a private paste."
          (ext (or (cdr (assoc major-mode gist-supported-modes-alist))
                   (file-name-extension file)
                   "txt"))
-         (api (gh-gist-api "api" :sync nil))
          (filename (concat (file-name-sans-extension name) "." ext)) 
          (files (list (gh-gist-gist-file "file" 
                                          :filename filename
-                                         :content (buffer-substring begin end))))
-         (gist (gh-gist-gist "gist" 
-                             :public (not private)
-                             :description "posted from gist.el"
-                             :files files)))
-    (let ((resp (gh-gist-new api gist)))
-      (gh-api-add-response-callback resp (or callback 'gist-created-callback)))))
+                                         :content (buffer-substring begin end)))))
+    (gist-internal files private nil callback)))
+
+(defun gist-files (filenames &optional private callback)
+  (let ((files nil))
+    (dolist (f filenames)
+      (with-temp-buffer 
+        (insert-file-contents f)
+        (let ((name (file-name-nondirectory f)))
+          (push (gh-gist-gist-file name :filename name :content (buffer-string))
+                files))))
+    (gist-internal files private nil callback)))
 
 (defun gist-created-callback (gist)
   (let ((location (oref gist :url)))
@@ -338,6 +351,14 @@ for the gist."
   :lighter " gist"
   (make-local-variable 'gist-id)
   (make-local-variable 'gist-filename))
+
+(defun dired-gist-this-file (&optional private)
+  (interactive "P")
+  (gist-files (list (dired-get-file-for-visit)) private))
+
+(defun dired-do-gist (&optional private)
+  (interactive "P")
+  (gist-files (dired-get-marked-files) private))
 
 (provide 'gist)
 ;;; gist.el ends here.
