@@ -352,13 +352,16 @@ for the gist."
   (make-local-variable 'gist-id)
   (make-local-variable 'gist-filename))
 
-(defun dired-gist-this-file (&optional private)
-  (interactive "P")
-  (gist-files (list (dired-get-file-for-visit)) private))
+
+;;; Dired integration
+
+(require 'dired)
 
 (defun dired-do-gist (&optional private)
   (interactive "P")
   (gist-files (dired-get-marked-files) private))
+
+(define-key dired-mode-map "@" 'dired-do-gist)
 
 (provide 'gist)
 ;;; gist.el ends here.
