@@ -11,7 +11,7 @@
 ;; Version: 0.5
 ;; Created: 21 Jul 2008
 ;; Keywords: gist git github paste pastie pastebin
-;; Package-Requires: ((gh "0.2"))
+;; Package-Requires: ((gh "0.3"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -40,7 +40,6 @@
 
 ;;; Todo:
 ;;; - ease gist interaction with a minor mode
-;;; - integrate dired for multi-files gists
 
 ;;; Code:
 
@@ -87,10 +86,10 @@ they're posted.")
 
 (defun gist-internal (files &optional private description callback)
   (let* ((api (gh-gist-api "api" :sync nil))
-         (gist (gh-gist-gist "gist" 
-                             :public (not private)
-                             :description (or description "")
-                             :files files))
+         (gist (gh-gist-gist-stub "gist"
+                                  :public (not private)
+                                  :description (or description "")
+                                  :files files))
          (resp (gh-gist-new api gist)))
     (gh-api-add-response-callback resp (or callback 'gist-created-callback))))
 
@@ -106,8 +105,8 @@ With a prefix argument, makes a private paste."
          (ext (or (cdr (assoc major-mode gist-supported-modes-alist))
                   (file-name-extension file)
                   "txt"))
-         (filename (concat (file-name-sans-extension name) "." ext)) 
-         (files (list (gh-gist-gist-file "file" 
+         (filename (concat (file-name-sans-extension name) "." ext))
+         (files (list (gh-gist-gist-file "file"
                                          :filename filename
                                          :content (buffer-substring begin end)))))
     (gist-internal files private nil callback)))
@@ -115,7 +114,7 @@ With a prefix argument, makes a private paste."
 (defun gist-files (filenames &optional private callback)
   (let ((files nil))
     (dolist (f filenames)
-      (with-temp-buffer 
+      (with-temp-buffer
         (insert-file-contents f)
         (let ((name (file-name-nondirectory f)))
           (push (gh-gist-gist-file name :filename name :content (buffer-string))
@@ -185,7 +184,7 @@ Copies the URL into the kill ring."
         (message "Retrieving list of your gists...")
         (let ((api (gh-gist-api "api" :sync nil)))
           (let ((resp (gh-gist-list api)))
-            (gh-api-add-response-callback 
+            (gh-api-add-response-callback
              resp 'gist-lists-retrieved-callback))))
     (gist-list-cache-render gist-list-cache-db)))
 
@@ -209,7 +208,7 @@ the list."
 for the gist."
   (let ((repo (oref gist :id))
         (created-at (let ((vec (timezone-parse-date (oref gist :date))))
-                      (format "%s-%s-%s %s" 
+                      (format "%s-%s-%s %s"
                               (aref vec 0) (aref vec 1) (aref vec 2) (aref vec 3))))
         (description (or (oref gist :description) ""))
         (public (if (eq t (oref gist :public)) "public" "private")))
@@ -229,7 +228,7 @@ for the gist."
       (cond ((null gist)
              ;; fetch it
              (setq gist (oref (gh-gist-get api id) :data))
-             (object-add-to-list gist-list-cache-db :gists gist)) 
+             (object-add-to-list gist-list-cache-db :gists gist))
             ((not (gh-gist-gist-has-files gist))
              (gh-gist-get api gist))))
     (let ((files (oref gist :files)))
@@ -253,11 +252,11 @@ for the gist."
     (if multi
         (let ((ibuffer-mode-hook nil)
               (ibuffer-use-header-line nil)
-              (ibuffer-show-empty-filter-groups nil)) 
+              (ibuffer-show-empty-filter-groups nil))
           (ibuffer t prefix
                    `((name . ,(regexp-quote (concat prefix "/"))))
                    nil nil
-                   nil 
+                   nil
                    '((name))))
       (switch-to-buffer-other-window result))))
 
@@ -285,8 +284,10 @@ for the gist."
   (tabulated-list-init-header)
   (use-local-map gist-list-menu-mode-map))
 
+;;; Gist list persistent cache
+
 (defclass gist-list-cache (eieio-persistent)
-  ((version :initarg :version 
+  ((version :initarg :version
             :initform 0.1
             :type float)
    (timestamp :initarg :timestamp
@@ -331,10 +332,10 @@ for the gist."
       (goto-char (point-min))
       (forward-line 2)
       (while (not (eobp))
-        (if (member (tabulated-list-get-id) ids) 
+        (if (member (tabulated-list-get-id) ids)
             (tabulated-list-put-tag "+" t)
           (forward-line 1))))))
- 
+
 (defmethod gist-list-cache-invalidate ((cache gist-list-cache))
   (oset cache :gists nil))
 
@@ -342,6 +343,8 @@ for the gist."
   (oset cache :gists gists)
   (oset cache :timestamp (float-time (current-time)))
   (gist-list-cache-save))
+
+;;; Gist minor mode
 
 (defvar gist-id nil)
 (defvar gist-filename nil)
