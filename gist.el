@@ -11,7 +11,7 @@
 ;; Version: 0.5a
 ;; Created: 21 Jul 2008
 ;; Keywords: gist git github paste pastie pastebin
-;; Package-Requires: ((gh "0.3") (tabulated-list "0"))
+;; Package-Requires: ((gh "0.3.1") (tabulated-list "0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -85,7 +85,7 @@ they're posted.")
                                      (tex-mode . "tex")
                                      (xml-mode . "xml")))
 
-(defun gist-internal (files &optional private description callback)
+(defun gist-internal-new (files &optional private description callback)
   (let* ((api (gh-gist-api "api" :sync nil))
          (gist (gh-gist-gist-stub "gist"
                                   :public (not private)
@@ -110,7 +110,7 @@ With a prefix argument, makes a private paste."
          (files (list (gh-gist-gist-file "file"
                                          :filename filename
                                          :content (buffer-substring begin end)))))
-    (gist-internal files private nil callback)))
+    (gist-internal-new files private nil callback)))
 
 (defun gist-files (filenames &optional private callback)
   (let ((files nil))
@@ -120,7 +120,7 @@ With a prefix argument, makes a private paste."
         (let ((name (file-name-nondirectory f)))
           (push (gh-gist-gist-file name :filename name :content (buffer-string))
                 files))))
-    (gist-internal files private nil callback)))
+    (gist-internal-new files private nil callback)))
 
 (defun gist-created-callback (gist)
   (let ((location (oref gist :url)))
@@ -265,11 +265,28 @@ for the gist."
   (interactive)
   (gist-fetch (tabulated-list-get-id)))
 
+(defun gist-edit-current-description ()
+  (interactive)
+  (let* ((id (tabulated-list-get-id))
+         (gist (gist-list-cache-get-gist gist-list-cache-db id))
+         (old-descr (oref gist :description))
+         (new-descr (read-from-minibuffer "Description: " old-descr)))
+    (let* ((g (make-instance 'gh-gist-gist :id (oref gist :id)
+                             :description new-descr
+                             :public (oref gist :public)
+                             :files nil))
+           (api (gh-gist-api "api" :sync t))
+           (resp (gh-gist-edit api g)))
+      (gh-api-add-response-callback resp
+                                    (lambda (gist)
+                                      (gist-list-reload))))))
+
 (defvar gist-list-menu-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map tabulated-list-mode-map)
     (define-key map "\C-m" 'gist-fetch-current)
     (define-key map "g" 'gist-list-reload)
+    (define-key map "e" 'gist-edit-current-description)
     map))
 
 (define-derived-mode gist-list-mode tabulated-list-mode "Gist Menu"
@@ -336,6 +353,11 @@ for the gist."
         (if (member (tabulated-list-get-id) ids)
             (tabulated-list-put-tag "+" t)
           (forward-line 1))))))
+
+(defmethod gist-list-cache-get-gist ((cache gist-list-cache) id)
+  (let ((gists (oref cache :gists)))
+    (loop for gist in gists if (string= (oref gist :id) id)
+          return gist)))
 
 (defmethod gist-list-cache-invalidate ((cache gist-list-cache))
   (oset cache :gists nil))
