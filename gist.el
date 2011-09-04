@@ -38,10 +38,10 @@
 ;; THIS IS AN EXPERIMENTAL VERSION BASED ON gh.el LIBRARY
 ;; see https://github.com/sigma/gh.el
 
-;;; Todo:
-;;; - ease gist interaction with a minor mode
-
 ;;; Code:
+
+(eval-when-compile
+  (require 'cl))
 
 (require 'eieio)
 (require 'eieio-base)
