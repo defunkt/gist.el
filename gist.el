@@ -1,4 +1,4 @@
-;; gist.el --- Emacs integration for gist.github.com
+;;; gist.el --- Emacs integration for gist.github.com
 
 ;; Author: Christian Neukirchen <purl.org/net/chneukirchen>
 ;; Maintainer: Chris Wanstrath <chris@ozmm.org>
@@ -8,10 +8,10 @@
 ;; Phil Hagelberg
 ;; Dan McKinley
 ;; Yann Hodique <yann.hodique@gmail.com>
-;; Version: 0.5
+;; Version: 0.5a
 ;; Created: 21 Jul 2008
 ;; Keywords: gist git github paste pastie pastebin
-;; Package-Requires: ((gh "0.3"))
+;; Package-Requires: ((gh "0.3") (tabulated-list "0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -46,6 +46,7 @@
 (require 'eieio)
 (require 'eieio-base)
 (require 'gh-gist)
+(require 'tabulated-list)
 
 (defvar gist-view-gist nil
   "If non-nil, automatically use `browse-url' to view gists after
