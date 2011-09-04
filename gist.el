@@ -356,7 +356,6 @@ for the gist."
           (push (oref gist :id) ids))))
     (save-excursion
       (goto-char (point-min))
-      (forward-line 2)
       (while (not (eobp))
         (if (member (tabulated-list-get-id) ids)
             (tabulated-list-put-tag "+" t)
