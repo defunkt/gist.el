@@ -271,10 +271,9 @@ for the gist."
          (gist (gist-list-cache-get-gist gist-list-cache-db id))
          (old-descr (oref gist :description))
          (new-descr (read-from-minibuffer "Description: " old-descr)))
-    (let* ((g (make-instance 'gh-gist-gist :id (oref gist :id)
-                             :description new-descr
-                             :public (oref gist :public)
-                             :files nil))
+    (let* ((g (clone gist
+                     :files nil
+                     :description new-descr))
            (api (gh-gist-api "api" :sync t))
            (resp (gh-gist-edit api g)))
       (gh-api-add-response-callback resp
@@ -372,12 +371,59 @@ for the gist."
 (defvar gist-id nil)
 (defvar gist-filename nil)
 
+(defun gist-mode-edit-buffer (&optional new-name)
+  (when (or (buffer-modified-p) new-name)
+    (let* ((id gist-id)
+           (gist (gist-list-cache-get-gist gist-list-cache-db id))
+           (files (list
+                   (make-instance 'gh-gist-gist-file
+                                  :filename (or new-name gist-filename)
+                                  :content (buffer-string)))))
+      (when new-name
+        ;; remove old file as well
+        (add-to-list 'files
+                     (make-instance 'gh-gist-gist-file
+                                    :filename gist-filename
+                                    :content nil)))
+      (let* ((g (clone gist
+                       :files files))
+             (api (gh-gist-api "api" :sync t))
+             (resp (gh-gist-edit api g)))
+        (gh-api-add-response-callback
+         resp
+         (lambda (gist)
+           (set-buffer-modified-p nil)
+           (when new-name
+             (rename-buffer (replace-regexp-in-string "/.*$"
+                                                      (concat "/" new-name)
+                                                      (buffer-name)))
+             (setq gist-filename new-name))
+           (let ((g (gist-list-cache-get-gist
+                     gist-list-cache-db
+                     (oref gist :id))))
+             (oset g :files (oref gist :files)))))))))
+
+(defun gist-mode-save-buffer ()
+  (interactive)
+  (gist-mode-edit-buffer))
+
+(defun gist-mode-write-file ()
+  (interactive)
+  (let ((new-name (read-from-minibuffer "File name: " gist-filename)))
+    (gist-mode-edit-buffer new-name)))
+
+(defvar gist-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [remap save-buffer] 'gist-mode-save-buffer)
+    (define-key map [remap write-file] 'gist-mode-write-file)
+    map))
+
 (define-minor-mode gist-mode
   "Minor mode for buffers containing gists files"
   :lighter " gist"
+  :map 'gist-mode-map
   (make-local-variable 'gist-id)
   (make-local-variable 'gist-filename))
-
 
 ;;; Dired integration
 
