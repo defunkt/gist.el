@@ -225,7 +225,7 @@ Copies the URL into the kill ring."
       (gist-region-private (point) (mark))
       (mark-inactive (gist-buffer-private))))
 
-(defvar gist-fetch-url "https://gist.github.com/%d.txt"
+(defvar gist-fetch-url "https://gist.github.com/raw/%d"
   "Raw Gist content URL format")
 
 ;;;###autoload
