@@ -280,12 +280,21 @@ for the gist."
                                     (lambda (gist)
                                       (gist-list-reload))))))
 
+(defun gist-kill-current ()
+  (interactive)
+  (let ((id (tabulated-list-get-id)))
+    (when (yes-or-no-p (format "Really delete gist %s ?" id) )
+      (let* ((api (gh-gist-api "api" :sync t))
+             (resp (gh-gist-delete api id)))
+        (gist-list-reload)))))
+
 (defvar gist-list-menu-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map tabulated-list-mode-map)
     (define-key map "\C-m" 'gist-fetch-current)
     (define-key map "g" 'gist-list-reload)
     (define-key map "e" 'gist-edit-current-description)
+    (define-key map "k" 'gist-kill-current)
     map))
 
 (define-derived-mode gist-list-mode tabulated-list-mode "Gist Menu"
@@ -347,7 +356,6 @@ for the gist."
           (push (oref gist :id) ids))))
     (save-excursion
       (goto-char (point-min))
-      (forward-line 2)
       (while (not (eobp))
         (if (member (tabulated-list-get-id) ids)
             (tabulated-list-put-tag "+" t)
