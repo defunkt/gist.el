@@ -280,6 +280,24 @@ for the gist."
                                     (lambda (gist)
                                       (gist-list-reload))))))
 
+(defun gist-add-buffer (buffer)
+  (interactive "bBuffer:")
+  (let* ((buffer (get-buffer buffer))
+         (id (tabulated-list-get-id))
+         (gist (gist-list-cache-get-gist gist-list-cache-db id))
+         (fname (or (buffer-file-name buffer) (buffer-name buffer))))
+    (let* ((g (clone gist :files
+                     (list
+                      (gh-gist-gist-file "file"
+                                         :filename fname
+                                         :content (with-current-buffer buffer
+                                                    (buffer-string ))))))
+           (api (gh-gist-api "api" :sync t))
+           (resp (gh-gist-edit api g)))
+      (gh-api-add-response-callback resp
+                                    (lambda (gist)
+                                      (gist-list-reload))))))
+
 (defun gist-kill-current ()
   (interactive)
   (let ((id (tabulated-list-get-id)))
@@ -295,6 +313,7 @@ for the gist."
     (define-key map "g" 'gist-list-reload)
     (define-key map "e" 'gist-edit-current-description)
     (define-key map "k" 'gist-kill-current)
+    (define-key map "+" 'gist-add-buffer)
     map))
 
 (define-derived-mode gist-list-mode tabulated-list-mode "Gist Menu"
