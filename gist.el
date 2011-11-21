@@ -85,6 +85,36 @@ they're posted.")
                                      (tex-mode . "tex")
                                      (xml-mode . "xml")))
 
+(defvar gist-list-cache-file
+  (concat user-emacs-directory "var/gists.eieio"))
+
+(defclass gist-list-cache (eieio-persistent)
+  ((version :initarg :version
+            :initform 0.1
+            :type float)
+   (timestamp :initarg :timestamp
+              :initform (float-time (current-time))
+              :type float)
+   (gists :initarg :gists
+          :initform nil
+          :type list)))
+
+(defun gist-list-cache-load ()
+  (condition-case nil
+      (eieio-persistent-read gist-list-cache-file)
+    (error (gist-list-cache "Gists" :file gist-list-cache-file))))
+
+(defvar gist-list-cache-db (gist-list-cache-load))
+
+(defun gist-list-cache-save ()
+  (eieio-persistent-save gist-list-cache-db))
+
+(defvar gist-list-cache-timeout 600)
+
+(defvar gist-id nil)
+
+(defvar gist-filename nil)
+
 (defun gist-internal-new (files &optional private description callback)
   (let* ((api (gh-gist-api "api" :sync nil))
          (gist (gh-gist-gist-stub "gist"
@@ -106,9 +136,9 @@ With a prefix argument, makes a private paste."
          (ext (or (cdr (assoc major-mode gist-supported-modes-alist))
                   (file-name-extension file)
                   "txt"))
-         (filename (concat (file-name-sans-extension name) "." ext))
+         (fname (concat (file-name-sans-extension name) "." ext))
          (files (list (gh-gist-gist-file "file"
-                                         :filename filename
+                                         :filename fname
                                          :content (buffer-substring begin end)))))
     (gist-internal-new files private nil callback)))
 
@@ -353,32 +383,6 @@ for the gist."
 
 ;;; Gist list persistent cache
 
-(defclass gist-list-cache (eieio-persistent)
-  ((version :initarg :version
-            :initform 0.1
-            :type float)
-   (timestamp :initarg :timestamp
-              :initform (float-time (current-time))
-              :type float)
-   (gists :initarg :gists
-          :initform nil
-          :type list)))
-
-(defvar gist-list-cache-file
-  (concat user-emacs-directory "var/gists.eieio"))
-
-(defun gist-list-cache-load ()
-  (condition-case nil
-      (eieio-persistent-read gist-list-cache-file)
-    (error (gist-list-cache "Gists" :file gist-list-cache-file))))
-
-(defun gist-list-cache-save ()
-  (eieio-persistent-save gist-list-cache-db))
-
-(defvar gist-list-cache-db (gist-list-cache-load))
-
-(defvar gist-list-cache-timeout 600)
-
 (defmethod gist-list-cache-render ((cache gist-list-cache))
   (let ((gists (oref cache :gists)))
     (with-current-buffer (get-buffer-create "*gists*")
@@ -416,9 +420,6 @@ for the gist."
   (gist-list-cache-save))
 
 ;;; Gist minor mode
-
-(defvar gist-id nil)
-(defvar gist-filename nil)
 
 (defun gist-mode-edit-buffer (&optional new-name)
   (when (or (buffer-modified-p) new-name)
