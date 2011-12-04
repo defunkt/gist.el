@@ -8,10 +8,10 @@
 ;; Phil Hagelberg
 ;; Dan McKinley
 ;; Yann Hodique <yann.hodique@gmail.com>
-;; Version: 0.5a
+;; Version: 2.0
 ;; Created: 21 Jul 2008
 ;; Keywords: gist git github paste pastie pastebin
-;; Package-Requires: ((gh "0.3.2") (tabulated-list "0"))
+;; Package-Requires: ((gh "0.3.2") (pcache "0.1") (eieio "1.4") (tabulated-list "0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -45,7 +45,10 @@
 
 (require 'eieio)
 (require 'eieio-base)
+(require 'timezone)
+
 (require 'gh-gist)
+(require 'pcache)
 (require 'tabulated-list)
 
 (defvar gist-view-gist nil
