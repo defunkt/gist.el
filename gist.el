@@ -87,31 +87,7 @@ they're posted.")
                                      (tex-mode . "tex")
                                      (xml-mode . "xml")))
 
-(defvar gist-list-cache-file
-  (concat user-emacs-directory "var/gists.eieio"))
-
-(defclass gist-list-cache (eieio-persistent)
-  ((version :initarg :version
-            :initform 0.1
-            :type float)
-   (timestamp :initarg :timestamp
-              :initform (float-time (current-time))
-              :type float)
-   (gists :initarg :gists
-          :initform nil
-          :type list)))
-
-(defun gist-list-cache-load ()
-  (condition-case nil
-      (eieio-persistent-read gist-list-cache-file)
-    (error (gist-list-cache "Gists" :file gist-list-cache-file))))
-
-(defvar gist-list-cache-db (gist-list-cache-load))
-
-(defun gist-list-cache-save ()
-  (eieio-persistent-save gist-list-cache-db))
-
-(defvar gist-list-cache-timeout 600)
+(defvar gist-list-db nil)
 
 (defvar gist-id nil)
 
@@ -211,18 +187,13 @@ Copies the URL into the kill ring."
 (defun gist-list (&optional force-reload)
   "Displays a list of all of the current user's gists in a new buffer."
   (interactive "P")
-  (when (or force-reload
-            (> (float-time (current-time))
-               (+ (oref gist-list-cache-db :timestamp) gist-list-cache-timeout)))
-    (gist-list-cache-invalidate gist-list-cache-db))
-  (if (not (oref gist-list-cache-db :gists))
-      (progn
-        (message "Retrieving list of your gists...")
-        (let ((api (gh-gist-api "api" :sync nil)))
-          (let ((resp (gh-gist-list api)))
-            (gh-api-add-response-callback
-             resp 'gist-lists-retrieved-callback))))
-    (gist-list-cache-render gist-list-cache-db)))
+  (let ((api (gist-get-api nil)))
+    (when force-reload
+      (pcache-clear (oref api :cache))
+      (message "Retrieving list of your gists..."))
+    (let ((resp (gh-gist-list api)))
+      (gh-api-add-response-callback
+       resp 'gist-lists-retrieved-callback))))
 
 (defun gist-list-reload ()
   (interactive)
@@ -236,8 +207,8 @@ Copies the URL into the kill ring."
 (defun gist-lists-retrieved-callback (gists)
   "Called when the list of gists has been retrieved. Displays
 the list."
-  (gist-list-cache-update gist-list-cache-db gists)
-  (gist-list-cache-render gist-list-cache-db))
+  (setq gist-list-db gists)
+  (gist-list-render))
 
 (defun gist-parse-gist (gist)
   "Returns a list of the gist's attributes for display, given the xml list
@@ -257,14 +228,14 @@ for the gist."
         (multi nil)
         (prefix (format "*gist %s*" id))
         (result nil))
-    (dolist (g (oref gist-list-cache-db :gists))
+    (dolist (g gist-list-db)
       (when (string= (oref g :id) id)
         (setq gist g)))
     (let ((api (gist-get-api t)))
       (cond ((null gist)
              ;; fetch it
              (setq gist (oref (gh-gist-get api id) :data))
-             (object-add-to-list gist-list-cache-db :gists gist))
+             (add-to-list 'gist-list-db gist))
             ((not (gh-gist-gist-has-files gist))
              (gh-gist-get api gist))))
     (let ((files (oref gist :files)))
@@ -303,7 +274,7 @@ for the gist."
 (defun gist-edit-current-description ()
   (interactive)
   (let* ((id (tabulated-list-get-id))
-         (gist (gist-list-cache-get-gist gist-list-cache-db id))
+         (gist (gist-list-db-get-gist id))
          (old-descr (oref gist :description))
          (new-descr (read-from-minibuffer "Description: " old-descr)))
     (let* ((g (clone gist
@@ -316,10 +287,10 @@ for the gist."
                                       (gist-list-reload))))))
 
 (defun gist-add-buffer (buffer)
-  (interactive "bBuffer:")
+  (interactive "bBuffer: ")
   (let* ((buffer (get-buffer buffer))
          (id (tabulated-list-get-id))
-         (gist (gist-list-cache-get-gist gist-list-cache-db id))
+         (gist (gist-list-db-get-gist id))
          (fname (or (buffer-file-name buffer) (buffer-name buffer))))
     (let* ((g (clone gist :files
                      (list
@@ -338,11 +309,11 @@ for the gist."
                 (completing-read
                  "Filename to remove: "
                  (let* ((id (tabulated-list-get-id))
-                        (gist (gist-list-cache-get-gist gist-list-cache-db id)))
+                        (gist (gist-list-db-get-gist id)))
                    (mapcar #'(lambda (f) (oref f :filename))
                            (oref gist :files))))))
   (let* ((id (tabulated-list-get-id))
-         (gist (gist-list-cache-get-gist gist-list-cache-db id)))
+         (gist (gist-list-db-get-gist id)))
     (let* ((g (clone gist :files
                      (list
                       (gh-gist-gist-file "file"
@@ -386,24 +357,20 @@ for the gist."
   (tabulated-list-init-header)
   (use-local-map gist-list-menu-mode-map))
 
-;;; Gist list persistent cache
+(defun gist-list-render ()
+  (with-current-buffer (get-buffer-create "*gists*")
+    (gist-list-mode)
+    (setq tabulated-list-entries
+          (mapcar 'gist-tabulated-entry gist-list-db))
+    (tabulated-list-print)
+    (gist-list-tag-multi-files)
+    (set-window-buffer nil (current-buffer))))
 
-(defmethod gist-list-cache-render ((cache gist-list-cache))
-  (let ((gists (oref cache :gists)))
-    (with-current-buffer (get-buffer-create "*gists*")
-      (gist-list-mode)
-      (setq tabulated-list-entries
-            (mapcar 'gist-tabulated-entry gists))
-      (tabulated-list-print)
-      (gist-list-cache-tag-multi-files cache)
-      (set-window-buffer nil (current-buffer)))))
-
-(defmethod gist-list-cache-tag-multi-files ((cache gist-list-cache))
+(defun gist-list-tag-multi-files ()
   (let ((ids nil))
-    (let ((gists (oref cache :gists)))
-      (dolist (gist gists)
-        (when (< 1 (length (oref gist :files)))
-          (push (oref gist :id) ids))))
+    (dolist (gist gist-list-db)
+      (when (< 1 (length (oref gist :files)))
+        (push (oref gist :id) ids)))
     (save-excursion
       (goto-char (point-min))
       (while (not (eobp))
@@ -411,25 +378,16 @@ for the gist."
             (tabulated-list-put-tag "+" t)
           (forward-line 1))))))
 
-(defmethod gist-list-cache-get-gist ((cache gist-list-cache) id)
-  (let ((gists (oref cache :gists)))
-    (loop for gist in gists if (string= (oref gist :id) id)
-          return gist)))
-
-(defmethod gist-list-cache-invalidate ((cache gist-list-cache))
-  (oset cache :gists nil))
-
-(defmethod gist-list-cache-update ((cache gist-list-cache) gists)
-  (oset cache :gists gists)
-  (oset cache :timestamp (float-time (current-time)))
-  (gist-list-cache-save))
+(defun gist-list-db-get-gist (id)
+  (loop for gist in gist-list-db if (string= (oref gist :id) id)
+        return gist))
 
 ;;; Gist minor mode
 
 (defun gist-mode-edit-buffer (&optional new-name)
   (when (or (buffer-modified-p) new-name)
     (let* ((id gist-id)
-           (gist (gist-list-cache-get-gist gist-list-cache-db id))
+           (gist (gist-list-db-get-gist id))
            (files (list
                    (make-instance 'gh-gist-gist-file
                                   :filename (or new-name gist-filename)
@@ -453,9 +411,7 @@ for the gist."
                                                       (concat "/" new-name)
                                                       (buffer-name)))
              (setq gist-filename new-name))
-           (let ((g (gist-list-cache-get-gist
-                     gist-list-cache-db
-                     (oref gist :id))))
+           (let ((g (gist-list-db-get-gist (oref gist :id))))
              (oset g :files (oref gist :files)))))))))
 
 (defun gist-mode-save-buffer ()
