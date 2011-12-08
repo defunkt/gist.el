@@ -11,7 +11,7 @@
 ;; Version: 2.0
 ;; Created: 21 Jul 2008
 ;; Keywords: gist git github paste pastie pastebin
-;; Package-Requires: ((gh "0.3.2") (pcache "0.1") (eieio "1.4") (tabulated-list "0"))
+;; Package-Requires: ((gh "0.4.0") (eieio "1.4") (tabulated-list "0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -48,7 +48,6 @@
 (require 'timezone)
 
 (require 'gh-gist)
-(require 'pcache)
 (require 'tabulated-list)
 
 (defvar gist-view-gist nil
@@ -118,8 +117,11 @@ they're posted.")
 
 (defvar gist-filename nil)
 
+(defun gist-get-api (&optional sync)
+  (gh-gist-api "api" :sync sync :cache t))
+
 (defun gist-internal-new (files &optional private description callback)
-  (let* ((api (gh-gist-api "api" :sync nil))
+  (let* ((api (gist-get-api))
          (gist (gh-gist-gist-stub "gist"
                                   :public (not private)
                                   :description (or description "")
@@ -258,7 +260,7 @@ for the gist."
     (dolist (g (oref gist-list-cache-db :gists))
       (when (string= (oref g :id) id)
         (setq gist g)))
-    (let ((api (gh-gist-api "api" :sync t)))
+    (let ((api (gist-get-api t)))
       (cond ((null gist)
              ;; fetch it
              (setq gist (oref (gh-gist-get api id) :data))
@@ -307,7 +309,7 @@ for the gist."
     (let* ((g (clone gist
                      :files nil
                      :description new-descr))
-           (api (gh-gist-api "api" :sync t))
+           (api (gist-get-api t))
            (resp (gh-gist-edit api g)))
       (gh-api-add-response-callback resp
                                     (lambda (gist)
@@ -325,7 +327,7 @@ for the gist."
                                          :filename fname
                                          :content (with-current-buffer buffer
                                                     (buffer-string ))))))
-           (api (gh-gist-api "api" :sync t))
+           (api (gist-get-api t))
            (resp (gh-gist-edit api g)))
       (gh-api-add-response-callback resp
                                     (lambda (gist)
@@ -346,7 +348,7 @@ for the gist."
                       (gh-gist-gist-file "file"
                                          :filename fname
                                          :content nil))))
-           (api (gh-gist-api "api" :sync t))
+           (api (gist-get-api t))
            (resp (gh-gist-edit api g)))
       (gh-api-add-response-callback resp
                                     (lambda (gist)
@@ -356,7 +358,7 @@ for the gist."
   (interactive)
   (let ((id (tabulated-list-get-id)))
     (when (yes-or-no-p (format "Really delete gist %s ?" id) )
-      (let* ((api (gh-gist-api "api" :sync t))
+      (let* ((api (gist-get-api t))
              (resp (gh-gist-delete api id)))
         (gist-list-reload)))))
 
@@ -440,7 +442,7 @@ for the gist."
                                     :content nil)))
       (let* ((g (clone gist
                        :files files))
-             (api (gh-gist-api "api" :sync t))
+             (api (gist-get-api t))
              (resp (gh-gist-edit api g)))
         (gh-api-add-response-callback
          resp
