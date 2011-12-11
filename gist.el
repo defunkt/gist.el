@@ -105,7 +105,7 @@ accepts additional POST `params' as a list of (key . value) conses."
       (url-retrieve url callback))))
 
 ;;;###autoload
-(defun gist-region (begin end &optional private &optional callback)
+(defun gist-region (begin end &optional private callback)
   "Post the current region as a new paste at gist.github.com
 Copies the URL into the kill ring.
 
@@ -116,6 +116,8 @@ With a prefix argument, makes a private paste."
          (ext (or (cdr (assoc major-mode gist-supported-modes-alist))
                   (file-name-extension file)
                   "txt")))
+    (unless (string-match (concat "\\." ext) name)
+      (setq name (concat name "." ext)))
     (gist-request
      "https://gist.github.com/gists"
      (or callback 'gist-created-callback)
@@ -214,7 +216,7 @@ With a prefix argument, makes a private paste."
   (interactive "P")
   (condition-case nil
       (gist-region (point) (mark) private)
-      (mark-inactive (gist-buffer private))))
+    (error (gist-buffer private))))
 
 ;;;###autoload
 (defun gist-region-or-buffer-private ()
@@ -223,7 +225,7 @@ Copies the URL into the kill ring."
   (interactive)
   (condition-case nil
       (gist-region-private (point) (mark))
-      (mark-inactive (gist-buffer-private))))
+    (error (gist-buffer-private))))
 
 (defvar gist-fetch-url "https://gist.github.com/%d.txt"
   "Raw Gist content URL format")
