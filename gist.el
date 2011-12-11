@@ -116,6 +116,8 @@ With a prefix argument, makes a private paste."
          (ext (or (cdr (assoc major-mode gist-supported-modes-alist))
                   (file-name-extension file)
                   "txt")))
+    (unless (string-match (concat "\\." ext) name)
+      (setq name (concat name "." ext)))
     (gist-request
      "https://gist.github.com/gists"
      (or callback 'gist-created-callback)
