@@ -11,7 +11,7 @@
 ;; Version: 2.0
 ;; Created: 21 Jul 2008
 ;; Keywords: gist git github paste pastie pastebin
-;; Package-Requires: ((gh "0.4.0") (eieio "1.4") (tabulated-list "0"))
+;; Package-Requires: ((gh "0.4.1") (tabulated-list "0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -94,7 +94,7 @@ they're posted.")
 (defvar gist-filename nil)
 
 (defun gist-get-api (&optional sync)
-  (gh-gist-api "api" :sync sync :cache t))
+  (gh-gist-api "api" :sync sync :cache t :num-retries 1))
 
 (defun gist-internal-new (files &optional private description callback)
   (let* ((api (gist-get-api))
@@ -172,7 +172,7 @@ With a prefix argument, makes a private paste."
   (interactive "P")
   (condition-case nil
       (gist-region (point) (mark) private)
-      (mark-inactive (gist-buffer private))))
+    (mark-inactive (gist-buffer private))))
 
 ;;;###autoload
 (defun gist-region-or-buffer-private ()
@@ -181,7 +181,7 @@ Copies the URL into the kill ring."
   (interactive)
   (condition-case nil
       (gist-region-private (point) (mark))
-      (mark-inactive (gist-buffer-private))))
+    (mark-inactive (gist-buffer-private))))
 
 ;;;###autoload
 (defun gist-list (&optional force-reload)
