@@ -61,7 +61,4 @@ Meta
 Further information
 ===================
 
-Set `github-user` and `github-token` to your GitHub credentials to
-avoid checking `git-config`.
-
 See <http://github.com/blog/180-local-github-config>.
