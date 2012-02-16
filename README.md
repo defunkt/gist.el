@@ -15,6 +15,15 @@ In your emacs config:
     (add-to-list 'load-path "~/.emacs.d/vendor/gist.el")
     (require 'gist)
 
+Customize
+=========
+    
+    Customize the `github` group or both the `github-user` and
+    `github-token` variables to your [github](https://github.com)
+    username and API token which can be found at
+    [https://github.com/admin/settings](https://github.com/admin/settings)
+    under the **Account settings menu**.
+    
 Functions
 =========
 
