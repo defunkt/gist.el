@@ -55,9 +55,10 @@
   :group 'github
   :type 'string)
 
-(defcustom gist-view-gist nil
+(defcustom github-view-gist nil
   "*Whether to use `browse-url' to view gists after they're posted."
-  :type 'boolean
+  :type '(choice (const t)
+                 (const nil))
   :group 'github)
 
 (defvar gist-supported-modes-alist '((action-script-mode . "as")
@@ -136,7 +137,7 @@ With a prefix argument, makes a private paste."
 (defun gist-created-callback (status)
   (let ((location (cadr status)))
     (message "Paste created: %s" location)
-    (when gist-view-gist
+    (when github-view-gist
       (browse-url location))
     (kill-new location)
     (kill-buffer (current-buffer))))

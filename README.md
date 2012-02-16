@@ -18,46 +18,38 @@ In your emacs config:
 Customize
 =========
     
-    Customize the `github` group or both the `github-user` and
-    `github-token` variables to your [github](https://github.com)
-    username and API token which can be found at
+Customize the `github` group or both the `github-user` and
+`github-token` variables to your [github](https://github.com) username
+and API token which can be found at
     [https://github.com/admin/settings](https://github.com/admin/settings)
-    under the **Account settings menu**.
-    
+under the **Account settings menu**.
+
+Customize `github-view-gist` to `t` if you want to view your Gist using
+`browse-url` after it is created.
+
 Functions
 =========
 
-    gist-list - Lists your gists in a new buffer. Use arrow keys
+ + `gist-list` - Lists your gists in a new buffer. Use arrow keys
     to browse, RET to open one in the other buffer.
 
-    gist-region - Copies Gist URL into the kill ring.
+ + `gist-region` - Copies Gist URL into the kill ring.
     With a prefix argument, makes a private gist.
 
-    gist-region-private - Explicitly create a private gist.
+ + `gist-region-private` - Explicitly create a private gist.
 
-    gist-buffer - Copies Gist URL into the kill ring.
+ + `gist-buffer` - Copies Gist URL into the kill ring.
     With a prefix argument, makes a private gist.
 
-    gist-buffer-private - Explicitly create a private gist.
+ + `gist-buffer-private` - Explicitly create a private gist.
 
-    gist-region-or-buffer - Post either the current region, or if mark
+ + `gist-region-or-buffer` - Post either the current region, or if mark
     is not set, the current buffer as a new paste at gist.github.com .
     Copies the URL into the kill ring.
     With a prefix argument, makes a private paste.
 
-    gist-region-or-buffer-private - Explicitly create a gist from the
+ + `gist-region-or-buffer-private` - Explicitly create a gist from the
     region or buffer.
-
-Config
-======
-
-Set `gist-view-gist` to non-nil if you want to view your Gist using
-`browse-url` after it is created.
-
-Set `github-user` and `github-token` to your GitHub credentials to
-avoid checking `git-config`.
-
-See <http://github.com/blog/180-local-github-config>
 
 Meta
 ====
@@ -65,3 +57,11 @@ Meta
 * Code: `git clone git://github.com/defunkt/gist.el.git`
 * Home: <http://github.com/defunkt/gist.el>
 * Bugs: <http://github.com/defunkt/gist.el/issues>
+
+Further information
+===================
+
+Set `github-user` and `github-token` to your GitHub credentials to
+avoid checking `git-config`.
+
+See <http://github.com/blog/180-local-github-config>.
