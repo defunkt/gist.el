@@ -38,16 +38,28 @@
 (eval-when-compile (require 'cl))
 (require 'xml)
 
-(defvar github-user nil
-  "If non-nil, will be used as your GitHub username without checking
-git-config(1).")
-(defvar github-token nil
-  "If non-nil, will be used as your GitHub token without checking
-git-config(1).")
+(defvar github-version-number "0.3")
 
-(defvar gist-view-gist nil
-  "If non-nil, automatically use `browse-url' to view gists after they're
-posted.")
+(defgroup github nil
+  "gist.el is en emacs mode for working with github Gists."
+  :version github-version-number
+  :group 'github)
+
+(defcustom github-user  ""
+  "*Your GitHub username."
+  :group 'github
+  :type 'string)
+
+(defcustom github-token ""
+  "*Your GitHub API token."
+  :group 'github
+  :type 'string)
+
+(defcustom github-view-gist nil
+  "*Whether to use `browse-url' to view gists after they're posted."
+  :type '(choice (const t)
+                 (const nil))
+  :group 'github)
 
 (defvar gist-supported-modes-alist '((action-script-mode . "as")
                                      (c-mode . "c")
@@ -81,8 +93,6 @@ posted.")
                                      (tcl-mode . "tcl")
                                      (tex-mode . "tex")
                                      (xml-mode . "xml")))
-
-
 
 (defmacro github-with-auth-info (login token &rest body)
   "Binds the github authentication credentials to `login' and `token'.
@@ -127,7 +137,7 @@ With a prefix argument, makes a private paste."
 (defun gist-created-callback (status)
   (let ((location (cadr status)))
     (message "Paste created: %s" location)
-    (when gist-view-gist
+    (when github-view-gist
       (browse-url location))
     (kill-new location)
     (kill-buffer (current-buffer))))
@@ -155,8 +165,8 @@ Copies the URL into the kill ring."
                  (if (> (length string) 0)
                      (substring string 0 (- (length string) 1)))))
         (git (executable-find "git")))
-  (funcall strip (shell-command-to-string
-                  (concat git " config --global github." key)))))
+    (funcall strip (shell-command-to-string
+                    (concat git " config --global github." key)))))
 
 (defun github-set-config (key value)
   "Sets a GitHub specific value to the global Git config."
@@ -175,18 +185,14 @@ for the info then sets it to the git config."
   ;; defined, don't take the time to get it again.
   (if (boundp '*github-auth-info*)
       *github-auth-info*
-
-    (let* ((user (or github-user (github-config "user")))
-           (token (or github-token (github-config "token"))))
-
+    (let ((user (if (zerop (length github-user)) (github-config "user") github-user))
+          (token (if (zerop (length github-token)) (github-config "token") github-token)))
       (when (not user)
         (setq user (read-string "GitHub username: "))
         (github-set-config "user" user))
-
       (when (not token)
         (setq token (read-string "GitHub API token: "))
         (github-set-config "token" token))
-
       (cons user token))))
 
 ;;;###autoload
@@ -214,7 +220,7 @@ With a prefix argument, makes a private paste."
   (interactive "P")
   (condition-case nil
       (gist-region (point) (mark) private)
-      (mark-inactive (gist-buffer private))))
+    (mark-inactive (gist-buffer private))))
 
 ;;;###autoload
 (defun gist-region-or-buffer-private ()
@@ -223,7 +229,7 @@ Copies the URL into the kill ring."
   (interactive)
   (condition-case nil
       (gist-region-private (point) (mark))
-      (mark-inactive (gist-buffer-private))))
+    (mark-inactive (gist-buffer-private))))
 
 (defvar gist-fetch-url "https://gist.github.com/%d.txt"
   "Raw Gist content URL format")
@@ -244,7 +250,7 @@ and displays the list."
   (goto-char (point-min))
   (search-forward "<?xml")
   (let ((gists (gist-xml-cleanup
-                     (xml-parse-region (match-beginning 0) (point-max)))))
+                (xml-parse-region (match-beginning 0) (point-max)))))
     (kill-buffer (current-buffer))
     (with-current-buffer (get-buffer-create "*gists*")
       (toggle-read-only -1)
@@ -330,7 +336,7 @@ If the Gist already exists in a buffer, switches to it"
   (let* ((gist-buffer-name (format "*gist %d*" id))
          (gist-buffer (get-buffer gist-buffer-name)))
     (if (bufferp gist-buffer)
-      (switch-to-buffer-other-window gist-buffer)
+        (switch-to-buffer-other-window gist-buffer)
       (progn
         (message "Fetching Gist %d..." id)
         (setq gist-buffer
