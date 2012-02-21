@@ -1,17 +1,18 @@
 ;;; gist.el --- Emacs integration for gist.github.com
 
 ;; Author: Christian Neukirchen <purl.org/net/chneukirchen>
-;; Maintainer: Chris Wanstrath <chris@ozmm.org>
+;; Maintainer: Yann Hodique <yann.hodique@gmail.com>
 ;; Contributors:
+;; Chris Wanstrath <chris@ozmm.org>
 ;; Will Farrington <wcfarrington@gmail.com>
 ;; Michael Ivey
 ;; Phil Hagelberg
 ;; Dan McKinley
 ;; Yann Hodique <yann.hodique@gmail.com>
-;; Version: 2.0
+;; Version: 1.0
 ;; Created: 21 Jul 2008
 ;; Keywords: gist git github paste pastie pastebin
-;; Package-Requires: ((gh "0.4.1") (tabulated-list "0"))
+;; Package-Requires: ((gh "0.5.2") (tabulated-list "0"))
 
 ;; This file is NOT part of GNU Emacs.
 
