@@ -247,19 +247,18 @@ and displays the list."
                      (xml-parse-region (match-beginning 0) (point-max)))))
     (kill-buffer (current-buffer))
     (with-current-buffer (get-buffer-create "*gists*")
-      (toggle-read-only -1)
-      (goto-char (point-min))
-      (save-excursion
-        (kill-region (point-min) (point-max))
-        (gist-insert-list-header)
-        (mapc 'gist-insert-gist-link (xml-node-children (car gists)))
+      (let ((inhibit-read-only t))
+        (goto-char (point-min))
+        (save-excursion
+          (kill-region (point-min) (point-max))
+          (gist-insert-list-header)
+          (mapc 'gist-insert-gist-link (xml-node-children (car gists)))
 
-        ;; remove the extra newline at the end
-        (delete-backward-char 1))
+          ;; remove the extra newline at the end
+          (delete-char -1))
 
-      ;; skip header
-      (forward-line)
-      (toggle-read-only t)
+        ;; skip header
+        (forward-line))
       (set-window-buffer nil (current-buffer)))))
 
 (defun gist-insert-list-header ()
@@ -275,7 +274,7 @@ and displays the list."
   "Inserts a button that will open the given gist when pressed."
   (let* ((data (gist-parse-gist gist))
          (repo (string-to-number (car data))))
-    (mapc '(lambda (x) (insert (format "  %s    " x))) data)
+    (mapc (lambda (x) (insert (format "  %s    " x))) data)
     (make-text-button (line-beginning-position) (line-end-position)
                       'repo repo
                       'action 'gist-fetch-button
