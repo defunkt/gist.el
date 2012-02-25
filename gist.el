@@ -1,4 +1,4 @@
-;; gist.el --- Emacs integration for gist.github.com
+;;; gist.el --- Emacs integration for gist.github.com
 
 ;; Author: Christian Neukirchen <purl.org/net/chneukirchen>
 ;; Maintainer: Chris Wanstrath <chris@ozmm.org>
