@@ -187,13 +187,13 @@ Copies the URL into the kill ring."
   (let ((strip (lambda (string)
                  (if (> (length string) 0)
                      (substring string 0 (- (length string) 1)))))
-        (git (executable-find "git")))
+        (git (concat "\"" (executable-find "git") "\""))
   (funcall strip (shell-command-to-string
                   (concat git " config --global github." key)))))
 
 (defun github-set-config (key value)
   "Sets a GitHub specific value to the global Git config."
-  (let ((git (executable-find "git")))
+  (let ((git (concat "\"" (executable-find "git") "\"")))
     (shell-command-to-string
      (format git " config --global github.%s %s" key value))))
 
