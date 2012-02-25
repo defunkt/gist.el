@@ -217,7 +217,7 @@ With a prefix argument, makes a private paste."
   (interactive "P")
   (condition-case nil
       (gist-region (point) (mark) private)
-      (mark-inactive (gist-buffer private))))
+    (error (gist-buffer private))))
 
 ;;;###autoload
 (defun gist-region-or-buffer-private ()
@@ -226,7 +226,7 @@ Copies the URL into the kill ring."
   (interactive)
   (condition-case nil
       (gist-region-private (point) (mark))
-      (mark-inactive (gist-buffer-private))))
+    (error (gist-buffer-private))))
 
 (defvar gist-fetch-url "https://gist.github.com/raw/%d"
   "Raw Gist content URL format")
