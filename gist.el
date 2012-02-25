@@ -117,7 +117,8 @@ With a prefix argument, makes a private paste."
                   (file-name-extension file)
                   "txt")))
     (gist-request
-     "https://gist.github.com/gists"
+     (format "https://%s@gist.github.com/gists"
+             (or (car (github-auth-info)) ""))
      (or callback 'gist-created-callback)
      `(,@(if private '(("action_button" . "private")))
        ("file_ext[gistfile1]" . ,(concat "." ext))
@@ -225,7 +226,7 @@ Copies the URL into the kill ring."
       (gist-region-private (point) (mark))
       (mark-inactive (gist-buffer-private))))
 
-(defvar gist-fetch-url "https://gist.github.com/%d.txt"
+(defvar gist-fetch-url "https://gist.github.com/raw/%d"
   "Raw Gist content URL format")
 
 ;;;###autoload
@@ -235,7 +236,7 @@ Copies the URL into the kill ring."
   (message "Retrieving list of your gists...")
   (github-with-auth-info login token
     (gist-request
-     (format "https://gist.github.com/api/v1/xml/gists/%s" login)
+     (format "https://%s@gist.github.com/api/v1/xml/gists/%s" login login)
      'gist-lists-retrieved-callback)))
 
 (defun gist-lists-retrieved-callback (status)
