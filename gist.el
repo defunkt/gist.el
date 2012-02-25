@@ -105,7 +105,7 @@ accepts additional POST `params' as a list of (key . value) conses."
       (url-retrieve url callback))))
 
 ;;;###autoload
-(defun gist-region (begin end &optional private &optional callback)
+(defun gist-region (begin end &optional private callback)
   "Post the current region as a new paste at gist.github.com
 Copies the URL into the kill ring.
 
@@ -116,6 +116,8 @@ With a prefix argument, makes a private paste."
          (ext (or (cdr (assoc major-mode gist-supported-modes-alist))
                   (file-name-extension file)
                   "txt")))
+    (unless (string-match (concat "\\." ext) name)
+      (setq name (concat name "." ext)))
     (gist-request
      (format "https://%s@gist.github.com/gists"
              (or (car (github-auth-info)) ""))
