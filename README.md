@@ -6,6 +6,26 @@ gist.el -- Emacs integration for gist.github.com
 Uses your local GitHub config if it can find it.
 See <http://github.com/blog/180-local-github-config>
 
+News
+====
+
+What's new in 1.0 ?
+
+* gist.el now maintains a local cache so as to not go to the gist server every now and then.
+* multi-files gist support (indicated by a '+' in the gist list)
+* improved gist-list buffer, based on tabulated-list.el (same codebase as package.el)
+    New keybindings:
+    * `g` : reload the gist list from server
+    * `e` : edit current gist description
+    * `k` : delete current gist
+    * `+` : add a file to the current gist
+    * `-` : remove a file from the current gist
+* in-place edition. While viewing a gist file buffer, you can:
+    * `C-x C-s` : save a new version of the gist
+    * `C-x C-w` : rename some file
+* dired integration. From a dired buffer, you can:
+    * `@` : make a gist out of marked files (with a prefix, make it private)
+
 Install
 =======
 
