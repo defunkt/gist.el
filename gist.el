@@ -9,10 +9,10 @@
 ;; Phil Hagelberg
 ;; Dan McKinley
 ;; Yann Hodique <yann.hodique@gmail.com>
-;; Version: 1.0
+;; Version: 1.0.1
 ;; Created: 21 Jul 2008
 ;; Keywords: gist git github paste pastie pastebin
-;; Package-Requires: ((gh "0.5.2") (tabulated-list "0"))
+;; Package-Requires: ((eieio "1.3") (gh "0.5.3") (tabulated-list "0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -35,9 +35,6 @@
 
 ;; Uses your local GitHub config if it can find it.
 ;; See http://github.com/blog/180-local-github-config
-
-;; THIS IS AN EXPERIMENTAL VERSION BASED ON gh.el LIBRARY
-;; see https://github.com/sigma/gh.el
 
 ;;; Code:
 
