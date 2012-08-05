@@ -247,12 +247,14 @@ for the gist."
           (with-current-buffer buffer
             (delete-region (point-min) (point-max))
             (insert (oref f :content))
-            (when (fboundp mode)
-              (funcall mode))
             ;; set minor mode
             (gist-mode 1)
             (setq gist-id id
-                  gist-filename (oref f :filename))
+                  gist-filename (oref f :filename)
+                  buffer-file-name gist-filename)
+            (if (fboundp mode)
+                (funcall mode)
+              (normal-mode))
             (set-buffer-modified-p nil))
           (setq result buffer))))
     (if multi
