@@ -89,8 +89,10 @@ they're posted.")
 (defvar gist-list-db nil)
 
 (defvar gist-id nil)
+(make-variable-buffer-local 'gist-id)
 
 (defvar gist-filename nil)
+(make-variable-buffer-local 'gist-filename)
 
 (defun gist-get-api (&optional sync)
   (gh-gist-api "api" :sync sync :cache t :num-retries 1))
@@ -435,9 +437,7 @@ for the gist."
 (define-minor-mode gist-mode
   "Minor mode for buffers containing gists files"
   :lighter " gist"
-  :map 'gist-mode-map
-  (make-local-variable 'gist-id)
-  (make-local-variable 'gist-filename))
+  :map 'gist-mode-map)
 
 ;;; Dired integration
 
