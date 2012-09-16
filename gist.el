@@ -9,7 +9,7 @@
 ;; Phil Hagelberg
 ;; Dan McKinley
 ;; Yann Hodique <yann.hodique@gmail.com>
-;; Version: 1.0.1
+;; Version: 1.0.2
 ;; Created: 21 Jul 2008
 ;; Keywords: gist git github paste pastie pastebin
 ;; Package-Requires: ((eieio "1.3") (gh "0.5.3") (tabulated-list "0"))
