@@ -133,6 +133,7 @@ With a prefix argument, makes a private paste."
 
 (defun gist-created-callback (gist)
   (let ((location (oref gist :html-url)))
+    (gist-list-reload t)
     (message "Paste created: %s" location)
     (when gist-view-gist
       (browse-url location))
@@ -182,31 +183,33 @@ Copies the URL into the kill ring."
     (mark-inactive (gist-buffer-private))))
 
 ;;;###autoload
-(defun gist-list (&optional force-reload)
+(defun gist-list (&optional force-reload background)
   "Displays a list of all of the current user's gists in a new buffer."
   (interactive "P")
   (let ((api (gist-get-api nil)))
     (when force-reload
       (pcache-clear (oref api :cache))
-      (message "Retrieving list of your gists..."))
-    (let ((resp (gh-gist-list api)))
-      (gh-url-add-response-callback
-       resp 'gist-lists-retrieved-callback))))
+      (or background (message "Retrieving list of your gists...")))
+    (unless (and background (not (get-buffer "*gists*")))
+      (let ((resp (gh-gist-list api)))
+        (gh-url-add-response-callback
+         resp
+         (lambda (gists) (gist-lists-retrieved-callback gists background)))))))
 
-(defun gist-list-reload ()
+(defun gist-list-reload (&optional background)
   (interactive)
-  (gist-list t))
+  (gist-list t background))
 
 (defun gist-tabulated-entry (gist)
   (let* ((data (gist-parse-gist gist))
          (repo (car data)))
     (list repo (apply 'vector data))))
 
-(defun gist-lists-retrieved-callback (gists)
+(defun gist-lists-retrieved-callback (gists background)
   "Called when the list of gists has been retrieved. Displays
 the list."
   (setq gist-list-db gists)
-  (gist-list-render))
+  (gist-list-render background))
 
 (defun gist-parse-gist (gist)
   "Returns a list of the gist's attributes for display, given the xml list
@@ -368,14 +371,15 @@ put it into `kill-ring'."
   (tabulated-list-init-header)
   (use-local-map gist-list-menu-mode-map))
 
-(defun gist-list-render ()
+(defun gist-list-render (background)
   (with-current-buffer (get-buffer-create "*gists*")
     (gist-list-mode)
     (setq tabulated-list-entries
           (mapcar 'gist-tabulated-entry gist-list-db))
     (tabulated-list-print)
     (gist-list-tag-multi-files)
-    (set-window-buffer nil (current-buffer))))
+    (unless background
+      (set-window-buffer nil (current-buffer)))))
 
 (defun gist-list-tag-multi-files ()
   (let ((ids nil))
