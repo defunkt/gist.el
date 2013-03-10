@@ -335,6 +335,14 @@ for the gist."
              (resp (gh-gist-delete api id)))
         (gist-list-reload)))))
 
+(defun gist-print-current-url ()
+  "Display the currently selected gist's url in the echo area and
+put it into `kill-ring'."
+  (interactive)
+  (let* ((id (tabulated-list-get-id))
+         (gist (gist-list-db-get-gist id)))
+    (kill-new (message (oref gist :html-url)))))
+
 (defvar gist-list-menu-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map tabulated-list-mode-map)
@@ -344,6 +352,7 @@ for the gist."
     (define-key map "k" 'gist-kill-current)
     (define-key map "+" 'gist-add-buffer)
     (define-key map "-" 'gist-remove-file)
+    (define-key map "y" 'gist-print-current-url)
     map))
 
 (define-derived-mode gist-list-mode tabulated-list-mode "Gist Menu"
