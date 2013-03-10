@@ -330,7 +330,7 @@ for the gist."
 (defun gist-kill-current ()
   (interactive)
   (let ((id (tabulated-list-get-id)))
-    (when (yes-or-no-p (format "Really delete gist %s ?" id) )
+    (when (yes-or-no-p (format "Really delete gist %s ? " id) )
       (let* ((api (gist-get-api t))
              (resp (gh-gist-delete api id)))
         (gist-list-reload)))))
