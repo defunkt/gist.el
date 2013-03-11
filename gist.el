@@ -208,13 +208,22 @@ the list."
   (setq gist-list-db gists)
   (gist-list-render))
 
+(defun gist--get-time (gist)
+  (let* ((date (timezone-parse-date (oref gist :date)))
+         (time (timezone-parse-time (aref date 3))))
+    (encode-time (string-to-number (aref time 2))
+                 (string-to-number (aref time 1))
+                 (string-to-number (aref time 0))
+                 (string-to-number (aref date 2))
+                 (string-to-number (aref date 1))
+                 (string-to-number (aref date 0))
+                 (aref date 4))))
+
 (defun gist-parse-gist (gist)
   "Returns a list of the gist's attributes for display, given the xml list
 for the gist."
   (let ((repo (oref gist :id))
-        (created-at (let ((vec (timezone-parse-date (oref gist :date))))
-                      (format "%s-%s-%s %s"
-                              (aref vec 0) (aref vec 1) (aref vec 2) (aref vec 3))))
+        (created-at (format-time-string "%D %R" (gist--get-time gist)))
         (description (or (oref gist :description) ""))
         (public (if (eq t (oref gist :public)) "public" "private")))
     (list repo created-at public description)))
