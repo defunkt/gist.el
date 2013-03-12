@@ -205,7 +205,7 @@ Copies the URL into the kill ring."
          (repo (car data)))
     (list repo (apply 'vector data))))
 
-(defun gist-lists-retrieved-callback (gists background)
+(defun gist-lists-retrieved-callback (gists &optional background)
   "Called when the list of gists has been retrieved. Displays
 the list."
   (setq gist-list-db gists)
@@ -380,7 +380,7 @@ put it into `kill-ring'."
   (tabulated-list-init-header)
   (use-local-map gist-list-menu-mode-map))
 
-(defun gist-list-render (background)
+(defun gist-list-render (&optional background)
   (with-current-buffer (get-buffer-create "*gists*")
     (gist-list-mode)
     (setq tabulated-list-entries
