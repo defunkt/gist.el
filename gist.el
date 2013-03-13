@@ -8,9 +8,9 @@
 ;; Michael Ivey
 ;; Phil Hagelberg
 ;; Dan McKinley
-;; Version: 1.0.3
+;; Version: 1.1.0
 ;; Keywords: gist git github paste pastie pastebin
-;; Package-Requires: ((eieio "1.3") (gh "0.6.0") (tabulated-list "0"))
+;; Package-Requires: ((eieio "1.3") (gh "0.7.0") (tabulated-list "0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -43,6 +43,8 @@
 (require 'timezone)
 
 (require 'gh-gist)
+(require 'gh-profile)
+
 (require 'tabulated-list)
 
 (defvar gist-view-gist nil
@@ -92,7 +94,9 @@ they're posted.")
 (make-variable-buffer-local 'gist-filename)
 
 (defun gist-get-api (&optional sync)
-  (gh-gist-api "api" :sync sync :cache t :num-retries 1))
+  (let ((gh-profile-current-profile
+         (or gh-profile-current-profile (gh-profile-completing-read))))
+    (gh-gist-api "api" :sync sync :cache t :num-retries 1)))
 
 (defun gist-internal-new (files &optional private description callback)
   (let* ((api (gist-get-api))
@@ -186,7 +190,10 @@ Copies the URL into the kill ring."
 (defun gist-list (&optional force-reload background)
   "Displays a list of all of the current user's gists in a new buffer."
   (interactive "P")
-  (let ((api (gist-get-api nil)))
+  ;; if buffer exists, it contains the current gh profile
+  (let ((api (with-current-buffer (or (get-buffer "*gists*")
+                                      (current-buffer))
+               (gist-get-api nil))))
     (when force-reload
       (pcache-clear (oref api :cache))
       (or background (message "Retrieving list of your gists...")))
@@ -194,7 +201,11 @@ Copies the URL into the kill ring."
       (let ((resp (gh-gist-list api)))
         (gh-url-add-response-callback
          resp
-         (lambda (gists) (gist-lists-retrieved-callback gists background)))))))
+         (lambda (gists) (gist-lists-retrieved-callback gists background)))
+        (gh-url-add-response-callback
+         resp
+         `(lambda (&rest args)
+            (gist-set-current-profile ,(oref api :profile))))))))
 
 (defun gist-list-reload (&optional background)
   (interactive)
@@ -204,6 +215,10 @@ Copies the URL into the kill ring."
   (let* ((data (gist-parse-gist gist))
          (repo (car data)))
     (list repo (apply 'vector data))))
+
+(defun gist-set-current-profile (profile)
+  (with-current-buffer "*gists*"
+    (setq gh-profile-current-profile profile)))
 
 (defun gist-lists-retrieved-callback (gists &optional background)
   "Called when the list of gists has been retrieved. Displays
