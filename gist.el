@@ -256,7 +256,8 @@ for the gist."
   (let ((gist nil)
         (multi nil)
         (prefix (format "*gist %s*" id))
-        (result nil))
+        (result nil)
+        (profile (gh-profile-current-profile)))
     (dolist (g gist-list-db)
       (when (string= (oref g :id) id)
         (setq gist g)))
@@ -286,7 +287,8 @@ for the gist."
               ;; set minor mode
               (gist-mode 1)
               (setq gist-id id
-                    gist-filename fname))
+                    gist-filename fname
+                    gh-profile-current-profile profile))
             (set-buffer-modified-p nil))
           (setq result buffer))))
     (if multi
