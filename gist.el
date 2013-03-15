@@ -124,9 +124,10 @@ With a prefix argument, makes a private paste."
                   (file-name-extension file)
                   "txt"))
          (fname (concat (file-name-sans-extension name) "." ext))
-         (files (list (gh-gist-gist-file "file"
-                                         :filename fname
-                                         :content (buffer-substring begin end)))))
+         (files (list
+                 (gh-gist-gist-file "file"
+                                    :filename fname
+                                    :content (buffer-substring begin end)))))
     (gist-internal-new files private nil callback)))
 
 (defun gist-files (filenames &optional private callback)
@@ -172,7 +173,9 @@ Copies the URL into the kill ring."
 
 ;;;###autoload
 (defun gist-region-or-buffer (&optional private)
-  "Post either the current region, or if mark is not set, the current buffer as a new paste at gist.github.com
+  "Post either the current region, or if mark is not set, the
+  current buffer as a new paste at gist.github.com
+
 Copies the URL into the kill ring.
 
 With a prefix argument, makes a private paste."
@@ -183,7 +186,9 @@ With a prefix argument, makes a private paste."
 
 ;;;###autoload
 (defun gist-region-or-buffer-private ()
-  "Post either the current region, or if mark is not set, the current buffer as a new private paste at gist.github.com
+  "Post either the current region, or if mark is not set, the
+  current buffer as a new private paste at gist.github.com
+
 Copies the URL into the kill ring."
   (interactive)
   (condition-case nil
