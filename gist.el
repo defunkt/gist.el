@@ -47,6 +47,32 @@
 
 (require 'tabulated-list)
 
+(defgroup gist nil
+  "Gist"
+  :group 'applications)
+
+(defcustom gist-list-format '((id "Id" 10 nil identity)
+                              (created "Created" 20 nil "%D %R")
+                              (visibility "Visibility" 10 nil
+                                          (lambda (public)
+                                            (or (and public "public")
+                                                "private")))
+                              (description "Description" 0 nil identity))
+  "Format for gist list"
+  :type '(alist :key-type
+                (choice (const :tag "Id" id)
+                        (const :tag "Creation date" created)
+                        (const :tag "Visibility" visibility)
+                        (const :tag "Description" description))
+                :value-type
+                (list
+                 (string :tag "Label")
+                 (integer :tag "Field length")
+                 (boolean :tag "Sortable")
+                 (choice (string :tag "Format")
+                         (function :tag "Formatter"))))
+  :group 'gist)
+
 (defvar gist-view-gist nil
   "If non-nil, automatically use `browse-url' to view gists after
 they're posted.")
@@ -255,10 +281,22 @@ the list."
   "Returns a list of the gist's attributes for display, given the xml list
 for the gist."
   (let ((repo (oref gist :id))
-        (created-at (format-time-string "%D %R" (gist--get-time gist)))
-        (description (or (oref gist :description) ""))
-        (public (if (eq t (oref gist :public)) "public" "private")))
-    (list repo created-at public description)))
+        (creation (gist--get-time gist))
+        (desc (or (oref gist :description) ""))
+        (public (oref gist :public)))
+    (loop for (id label width sort format) in gist-list-format
+          collect (let ((string-formatter (if (eq id 'created)
+                                              'format-time-string
+                                            'format))
+                        (value (cond ((eq id 'id) repo)
+                                     ((eq id 'created) creation)
+                                     ((eq id 'visibility) public)
+                                     ((eq id 'description) desc))))
+                    (funcall (if (stringp format)
+                                 (lambda (val)
+                                   (funcall string-formatter format val))
+                               format)
+                             value)))))
 
 ;;;###autoload
 (defun gist-fetch (id)
@@ -402,10 +440,10 @@ put it into `kill-ring'."
   "Major mode for browsing gists.
 \\<gist-list-menu-mode-map>
 \\{gist-list-menu-mode-map}"
-  (setq tabulated-list-format [("Id" 10 nil)
-                               ("Created" 20 nil)
-                               ("Visibility" 10 nil)
-                               ("Description" 0 nil)]
+  (setq tabulated-list-format
+        (apply 'vector
+               (loop for (sym label width sort format) in gist-list-format
+                     collect (list label width sort)))
         tabulated-list-padding 2
         tabulated-list-sort-key nil)
   (tabulated-list-init-header)
