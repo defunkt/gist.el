@@ -107,9 +107,11 @@ they're posted.")
          (resp (gh-gist-new api gist)))
     (gh-url-add-response-callback
      resp
-     `(lambda (gist)
-        (let ((gh-profile-current-profile ,(oref api :profile)))
-          (funcall (or ,callback 'gist-created-callback) gist))))))
+     (lexical-let ((profile (oref api :profile))
+                   (cb callback))
+       (lambda (gist)
+         (let ((gh-profile-current-profile profile))
+           (funcall (or cb 'gist-created-callback) gist)))))))
 
 ;;;###autoload
 (defun gist-region (begin end &optional private callback)
@@ -200,21 +202,28 @@ Copies the URL into the kill ring."
   "Displays a list of all of the current user's gists in a new buffer."
   (interactive "P")
   ;; if buffer exists, it contains the current gh profile
-  (let ((api (with-current-buffer (or (get-buffer "*gists*")
-                                      (current-buffer))
-               (gist-get-api nil))))
+  (let* ((gh-profile-current-profile (or gh-profile-current-profile
+                                         (gh-profile-completing-read)))
+         (bufname (format "*%s:gists*" gh-profile-current-profile))
+         (api (gist-get-api nil)))
     (when force-reload
       (pcache-clear (oref api :cache))
       (or background (message "Retrieving list of your gists...")))
-    (unless (and background (not (get-buffer "*gists*")))
+    (unless (and background (not (get-buffer bufname)))
       (let ((resp (gh-gist-list api)))
         (gh-url-add-response-callback
          resp
-         (lambda (gists) (gist-lists-retrieved-callback gists background)))
+         (lexical-let ((buffer bufname))
+           (lambda (gists)
+             (with-current-buffer (get-buffer-create buffer)
+               (gist-lists-retrieved-callback gists background)))))
         (gh-url-add-response-callback
          resp
-         `(lambda (&rest args)
-            (gist-set-current-profile ,(oref api :profile))))))))
+         (lexical-let ((profile (oref api :profile))
+                       (buffer bufname))
+           (lambda (&rest args)
+             (with-current-buffer buffer
+               (setq gh-profile-current-profile profile)))))))))
 
 (defun gist-list-reload (&optional background)
   (interactive)
@@ -224,10 +233,6 @@ Copies the URL into the kill ring."
   (let* ((data (gist-parse-gist gist))
          (repo (car data)))
     (list repo (apply 'vector data))))
-
-(defun gist-set-current-profile (profile)
-  (with-current-buffer "*gists*"
-    (setq gh-profile-current-profile profile)))
 
 (defun gist-lists-retrieved-callback (gists &optional background)
   "Called when the list of gists has been retrieved. Displays
@@ -407,14 +412,13 @@ put it into `kill-ring'."
   (use-local-map gist-list-menu-mode-map))
 
 (defun gist-list-render (&optional background)
-  (with-current-buffer (get-buffer-create "*gists*")
-    (gist-list-mode)
-    (setq tabulated-list-entries
-          (mapcar 'gist-tabulated-entry gist-list-db))
-    (tabulated-list-print)
-    (gist-list-tag-multi-files)
-    (unless background
-      (set-window-buffer nil (current-buffer)))))
+  (gist-list-mode)
+  (setq tabulated-list-entries
+        (mapcar 'gist-tabulated-entry gist-list-db))
+  (tabulated-list-print)
+  (gist-list-tag-multi-files)
+  (unless background
+    (set-window-buffer nil (current-buffer))))
 
 (defun gist-list-tag-multi-files ()
   (let ((ids nil))
