@@ -105,7 +105,11 @@ they're posted.")
                                   :description (or description "")
                                   :files files))
          (resp (gh-gist-new api gist)))
-    (gh-url-add-response-callback resp (or callback 'gist-created-callback))))
+    (gh-url-add-response-callback
+     resp
+     `(lambda (gist)
+        (let ((gh-profile-current-profile ,(oref api :profile)))
+          (funcall (or ,callback 'gist-created-callback) gist))))))
 
 ;;;###autoload
 (defun gist-region (begin end &optional private callback)
