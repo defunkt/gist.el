@@ -374,7 +374,7 @@ for the gist."
   (let* ((buffer (get-buffer buffer))
          (id (tabulated-list-get-id))
          (gist (gist-list-db-get-gist id))
-         (fname (or (buffer-file-name buffer) (buffer-name buffer))))
+         (fname (file-name-nondirectory (or (buffer-file-name buffer) (buffer-name buffer)))))
     (let* ((g (clone gist :files
                      (list
                       (gh-gist-gist-file "file"
