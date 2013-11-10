@@ -328,10 +328,10 @@ for the gist."
             (insert (oref f :content))
             (let ((fname (oref f :filename)))
               ;; set major mode
-              (setq buffer-file-name fname)
               (if (fboundp mode)
                   (funcall mode)
-                (normal-mode))
+                (let ((buffer-file-name fname))
+                  (normal-mode)))
               ;; set minor mode
               (gist-mode 1)
               (setq gist-id id
