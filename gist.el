@@ -73,6 +73,11 @@
                          (function :tag "Formatter"))))
   :group 'gist)
 
+(defcustom gist-always-private nil
+  "If non-nil, all gists are private"
+  :type 'boolean
+  :group 'gist)
+
 (defvar gist-view-gist nil
   "If non-nil, automatically use `browse-url' to view gists after
 they're posted.")
@@ -125,9 +130,10 @@ they're posted.")
     (gh-gist-api "api" :sync sync :cache t :num-retries 1)))
 
 (defun gist-internal-new (files &optional private description callback)
-  (let* ((api (gist-get-api))
+  (let* ((private? (if gist-always-private nil (not private)))
+         (api (gist-get-api))
          (gist (gh-gist-gist-stub "gist"
-                                  :public (not private)
+                                  :public private?
                                   :description (or description "")
                                   :files files))
          (resp (gh-gist-new api gist)))
