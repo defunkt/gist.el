@@ -73,7 +73,7 @@
                          (function :tag "Formatter"))))
   :group 'gist)
 
-(defvar gist-view-gist nil
+(defcustom gist-view-gist nil
   "If non-nil, automatically use `browse-url' to view gists after
 they're posted.")
 
