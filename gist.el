@@ -127,7 +127,7 @@ they're posted.")
 (defun gist-internal-new (files &optional private description callback)
   (let* ((api (gist-get-api))
          (gist (gh-gist-gist-stub "gist"
-                                  :public (not private)
+                                  :public (or (not private) json-false)
                                   :description (or description "")
                                   :files files))
          (resp (gh-gist-new api gist)))
@@ -283,7 +283,7 @@ for the gist."
   (let ((repo (oref gist :id))
         (creation (gist--get-time gist))
         (desc (or (oref gist :description) ""))
-        (public (oref gist :public)))
+        (public (eq t (oref gist :public))))
     (loop for (id label width sort format) in gist-list-format
           collect (let ((string-formatter (if (eq id 'created)
                                               'format-time-string
