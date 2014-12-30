@@ -357,6 +357,12 @@ for the gist."
   (interactive)
   (gist-fetch (tabulated-list-get-id)))
 
+(defun gist-fetch-current-noselect ()
+  (interactive)
+  (let ((win (selected-window)))
+    (gist-fetch-current)
+    (select-window win)))
+
 (defun gist-edit-current-description ()
   (interactive)
   (let* ((id (tabulated-list-get-id))
@@ -440,6 +446,7 @@ put it into `kill-ring'."
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map tabulated-list-mode-map)
     (define-key map "\C-m" 'gist-fetch-current)
+    (define-key map [tab] 'gist-fetch-current-noselect)
     (define-key map "g" 'gist-list-reload)
     (define-key map "e" 'gist-edit-current-description)
     (define-key map "k" 'gist-kill-current)
