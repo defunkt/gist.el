@@ -8,7 +8,7 @@
 ;; Michael Ivey
 ;; Phil Hagelberg
 ;; Dan McKinley
-;; Version: 1.2.0
+;; Version: 1.2.1
 ;; Keywords: gist git github paste pastie pastebin
 ;; Package-Requires: ((eieio "1.4") (gh "0.8.1") (tabulated-list "0"))
 
