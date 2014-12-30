@@ -346,7 +346,8 @@ for the gist."
               ;; set major mode
               (if (fboundp mode)
                   (funcall mode)
-                (let ((buffer-file-name fname))
+                (let ((buffer-file-name fname)
+                      enable-dir-local-variables)
                   (normal-mode)))
               ;; set minor mode
               (gist-mode 1)
