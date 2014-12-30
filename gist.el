@@ -80,6 +80,9 @@
   "If non-nil, automatically use `browse-url' to view gists after
 they're posted.")
 
+(defcustom gist-multiple-files-mark "+"
+  "Symbol to use to indicate multiple-files gist")
+
 (defvar gist-supported-modes-alist '((action-script-mode . "as")
                                      (c-mode . "c")
                                      (c++-mode . "cpp")
@@ -487,7 +490,7 @@ put it into `kill-ring'."
       (goto-char (point-min))
       (while (not (eobp))
         (if (member (tabulated-list-get-id) ids)
-            (tabulated-list-put-tag "+" t)
+            (tabulated-list-put-tag gist-multiple-files-mark t)
           (forward-line 1))))))
 
 (defun gist-list-db-get-gist (id)
