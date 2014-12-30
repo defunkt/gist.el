@@ -60,17 +60,20 @@
                               (description "Description" 0 nil identity))
   "Format for gist list"
   :type '(alist :key-type
-                (choice (const :tag "Id" id)
-                        (const :tag "Creation date" created)
-                        (const :tag "Visibility" visibility)
-                        (const :tag "Description" description))
-                :value-type
-                (list
-                 (string :tag "Label")
-                 (integer :tag "Field length")
-                 (boolean :tag "Sortable")
-                 (choice (string :tag "Format")
-                         (function :tag "Formatter"))))
+          (choice
+           (const :tag "Id" id)
+           (const :tag "Creation date" created)
+           (const :tag "Visibility" visibility)
+           (const :tag "Description" description)
+           (const :tag "Files" files))
+          :value-type
+          (list
+           (string :tag "Label")
+           (integer :tag "Field length")
+           (boolean :tag "Sortable")
+           (choice
+            (string :tag "Format")
+            (function :tag "Formatter"))))
   :group 'gist)
 
 (defcustom gist-view-gist nil
@@ -283,7 +286,8 @@ for the gist."
   (let ((repo (oref gist :id))
         (creation (gist--get-time gist))
         (desc (or (oref gist :description) ""))
-        (public (oref gist :public)))
+        (public (oref gist :public))
+        (fnames (mapcar (lambda (f) (oref f :filename)) (oref gist :files))))
     (loop for (id label width sort format) in gist-list-format
           collect (let ((string-formatter (if (eq id 'created)
                                               'format-time-string
@@ -291,7 +295,8 @@ for the gist."
                         (value (cond ((eq id 'id) repo)
                                      ((eq id 'created) creation)
                                      ((eq id 'visibility) public)
-                                     ((eq id 'description) desc))))
+                                     ((eq id 'description) desc)
+                                     ((eq id 'files) fnames))))
                     (funcall (if (stringp format)
                                  (lambda (val)
                                    (funcall string-formatter format val))
