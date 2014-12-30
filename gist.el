@@ -306,9 +306,7 @@ for the gist."
         (prefix (format "*gist %s*" id))
         (result nil)
         (profile (gh-profile-current-profile)))
-    (dolist (g gist-list-db)
-      (when (string= (oref g :id) id)
-        (setq gist g)))
+    (setq gist (gist-list-db-get-gist id))
     (let ((api (gist-get-api t)))
       (cond ((null gist)
              ;; fetch it
