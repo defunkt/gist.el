@@ -83,6 +83,10 @@ they're posted.")
 (defcustom gist-multiple-files-mark "+"
   "Symbol to use to indicate multiple-files gist")
 
+(defcustom gist-ask-for-description nil
+  "If non-nil, ask for a description before submitting
+  the gist.")
+
 (defvar gist-supported-modes-alist '((action-script-mode . "as")
                                      (c-mode . "c")
                                      (c++-mode . "cpp")
@@ -145,6 +149,10 @@ they're posted.")
          (let ((gh-profile-current-profile profile))
            (funcall (or cb 'gist-created-callback) gist)))))))
 
+(defun gist-ask-for-description-maybe ()
+  (when gist-ask-for-description
+    (read-from-minibuffer "Gist description: ")))
+
 ;;;###autoload
 (defun gist-region (begin end &optional private callback)
   "Post the current region as a new paste at gist.github.com
@@ -162,7 +170,8 @@ With a prefix argument, makes a private paste."
                  (gh-gist-gist-file "file"
                                     :filename fname
                                     :content (buffer-substring begin end)))))
-    (gist-internal-new files private nil callback)))
+    (gist-internal-new files private
+                       (gist-ask-for-description-maybe) callback)))
 
 (defun gist-files (filenames &optional private callback)
   (let ((files nil))
@@ -172,7 +181,8 @@ With a prefix argument, makes a private paste."
         (let ((name (file-name-nondirectory f)))
           (push (gh-gist-gist-file name :filename name :content (buffer-string))
                 files))))
-    (gist-internal-new files private nil callback)))
+    (gist-internal-new files private
+                       (gist-ask-for-description-maybe) callback)))
 
 (defun gist-created-callback (gist)
   (let ((location (oref gist :html-url)))
