@@ -260,7 +260,7 @@ Copies the URL into the kill ring."
 
 (defun gist-tabulated-entry (gist)
   (let* ((data (gist-parse-gist gist))
-         (repo (car data)))
+         (repo (oref gist :id)))
     (list repo (apply 'vector data))))
 
 (defun gist-lists-retrieved-callback (gists &optional background)
