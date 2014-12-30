@@ -8,9 +8,9 @@
 ;; Michael Ivey
 ;; Phil Hagelberg
 ;; Dan McKinley
-;; Version: 1.1.1
+;; Version: 1.2.0
 ;; Keywords: gist git github paste pastie pastebin
-;; Package-Requires: ((eieio "1.3") (gh "0.7.2") (tabulated-list "0"))
+;; Package-Requires: ((eieio "1.4") (gh "0.8.1") (tabulated-list "0"))
 
 ;; This file is NOT part of GNU Emacs.
 
