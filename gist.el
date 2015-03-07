@@ -10,7 +10,7 @@
 ;; Dan McKinley
 ;; Version: 1.2.1
 ;; Keywords: gist git github paste pastie pastebin
-;; Package-Requires: ((eieio "1.4") (gh "0.8.1") (tabulated-list "0"))
+;; Package-Requires: ((emacs "24.1") (gh "0.8.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
