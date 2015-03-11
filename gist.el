@@ -296,7 +296,7 @@ Copies the URL into the kill ring."
            (lambda (gists)
              (with-current-buffer (get-buffer-create buffer)
                (setq gist-list-buffer-user username)
-               (gist-lists-retrieved-callback gists username background)))))
+               (gist-lists-retrieved-callback gists background)))))
         (gh-url-add-response-callback
          resp
          (lexical-let ((profile (oref api :profile))
@@ -320,15 +320,16 @@ Copies the URL into the kill ring."
          (repo (oref gist :id)))
     (list repo (apply 'vector data))))
 
-(defun gist-lists-retrieved-callback (gists username &optional background)
+(defun gist-lists-retrieved-callback (gists &optional background)
   "Called when the list of gists has been retrieved. Displays
 the list."
-  (dolist (g (gethash username gist-list-db-by-user))
+  (dolist (g (gethash gist-list-buffer-user gist-list-db-by-user))
     (remhash (oref g :id) gist-list-db))
   (dolist (g gists)
     (puthash (oref g :id) g gist-list-db))
-  (puthash username gists gist-list-db-by-user)
-  (gist-list-render (gethash username gist-list-db-by-user) background))
+  (puthash gist-list-buffer-user gists gist-list-db-by-user)
+  (gist-list-render (gethash gist-list-buffer-user gist-list-db-by-user)
+                    background))
 
 (defun gist--get-time (gist)
   (let* ((date (timezone-parse-date (oref gist :date)))
@@ -429,7 +430,7 @@ for the gist."
     (select-window win)))
 
 (defun gist--check-perms-and-get-api (gist errormsg apiflg)
-  (let* ((api (gist-get-api t))
+  (let* ((api (gist-get-api apiflg))
          (username (gh-api-get-username api))
          (gs (gethash username gist-list-db-by-user)))
     (if (not (memq gist gs))
