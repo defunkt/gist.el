@@ -1,16 +1,16 @@
 ;;; gist.el --- Emacs integration for gist.github.com
 
 ;; Author: Yann Hodique <yann.hodique@gmail.com>
-;; Original author: Christian Neukirchen <purl.org/net/chneukirchen>
-;; Contributors:
-;; Chris Wanstrath <chris@ozmm.org>
-;; Will Farrington <wcfarrington@gmail.com>
-;; Michael Ivey
-;; Phil Hagelberg
-;; Dan McKinley
+;; Original Author: Christian Neukirchen <chneukirchen@gmail.com>
+;; Contributors: Chris Wanstrath <chris@ozmm.org>
+;;               Will Farrington <wcfarrington@gmail.com>
+;;               Michael Ivey
+;;               Phil Hagelberg
+;;               Dan McKinley
 ;; Version: 1.2.1
-;; Keywords: gist git github paste pastie pastebin
 ;; Package-Requires: ((emacs "24.1") (gh "0.8.1"))
+;; Keywords: tools
+;; Homepage: https://github.com/defunkt/gist.el
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -571,4 +571,4 @@ put it into `kill-ring'."
 (define-key dired-mode-map "@" 'dired-do-gist)
 
 (provide 'gist)
-;;; gist.el ends here.
+;;; gist.el ends here
