@@ -203,7 +203,7 @@ With a prefix argument, makes a private paste."
 
 (defun gist-created-callback (gist)
   (let ((location (oref gist :html-url)))
-    (gist-list-reload "" t)
+    (gist-list-reload 'current-user t)
     (message "Paste created: %s" location)
     (when gist-view-gist
       (browse-url location))
@@ -259,7 +259,7 @@ Copies the URL into the kill ring."
 ;;;###autoload
 (defun gist-list-user (username &optional force-reload background)
   "Displays a list of a user's gists in a new buffer.  When called from
-  a program, pass a blank string as the username to view the user's own
+  a program, pass 'current-user as the username to view the user's own
   gists, or nil for the username and a non-nil value for force-reload to
   reload the gists for the current buffer."
   (interactive
@@ -276,13 +276,15 @@ Copies the URL into the kill ring."
                         (buffer-name))
                     (format "*%s:%sgists*"
                             gh-profile-current-profile
-                            (if (string= "" username)
+                            (if (or (equal "" username)
+                                    (eq 'current-user username))
                                 ""
                               (format "%s's-" username)))))
          (api (gist-get-api nil))
          (username (or (and (null username) gist-list-buffer-user)
                        (and (not (or (null username)
-                                     (string= "" username)))
+                                     (equal "" username)
+                                     (eq 'current-user username)))
                             username)
                        (gh-api-get-username api))))
     (when force-reload
@@ -309,7 +311,7 @@ Copies the URL into the kill ring."
 (defun gist-list (&optional force-reload background)
   "Displays a list of all of the current user's gists in a new buffer."
   (interactive "P")
-  (gist-list-user "" force-reload background))
+  (gist-list-user 'current-user force-reload background))
 
 (defun gist-list-reload (&optional username background)
   (interactive)
@@ -496,6 +498,7 @@ for the gist."
                                     (gist-list-reload)))))
 
 (defun gist-kill-current ()
+  (interactive)
   (let* ((id (tabulated-list-get-id))
          (gist (gist-list-db-get-gist id))
          (api (gist--check-perms-and-get-api
