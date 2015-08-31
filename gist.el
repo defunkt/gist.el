@@ -8,7 +8,7 @@
 ;; Michael Ivey
 ;; Phil Hagelberg
 ;; Dan McKinley
-;; Version: 1.2.1
+;; Version: 1.2.2
 ;; Keywords: gist git github paste pastie pastebin
 ;; Package-Requires: ((emacs "24.1") (gh "0.8.1"))
 
