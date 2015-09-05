@@ -7,8 +7,8 @@
 ;;               Michael Ivey
 ;;               Phil Hagelberg
 ;;               Dan McKinley
-;; Version: 1.2.1
-;; Package-Requires: ((emacs "24.1") (gh "0.8.1"))
+;; Version: 1.2.2
+;; Package-Requires: ((eieio "1.4") (gh "0.9.2") (tabulated-list "0"))
 ;; Keywords: tools
 ;; Homepage: https://github.com/defunkt/gist.el
 
