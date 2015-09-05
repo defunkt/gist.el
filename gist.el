@@ -91,6 +91,13 @@
   :type 'boolean
   :group 'gist)
 
+(defcustom gist-created-fmt "Paste created: %s"
+  "Format for the message that gets shown upon successful gist
+creation.  Must contain a single %s for the location of the newly
+created gist."
+  :type 'string
+  :group 'gist)
+
 (defcustom gist-supported-modes-alist '((action-script-mode . "as")
                                         (c-mode . "c")
                                         (c++-mode . "cpp")
@@ -196,7 +203,7 @@ With a prefix argument, makes a private paste."
 (defun gist-created-callback (gist)
   (let ((location (oref gist :html-url)))
     (gist-list-reload t)
-    (message "Paste created: %s" location)
+    (message gist-created-fmt location)
     (when gist-view-gist
       (browse-url location))
     (kill-new location)))
