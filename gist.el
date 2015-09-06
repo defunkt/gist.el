@@ -7,7 +7,7 @@
 ;;               Michael Ivey
 ;;               Phil Hagelberg
 ;;               Dan McKinley
-;; Version: 1.3.0
+;; Version: 1.3.1
 ;; Package-Requires: ((emacs "24.1") (gh "0.9.2"))
 ;; Keywords: tools
 ;; Homepage: https://github.com/defunkt/gist.el
@@ -161,14 +161,14 @@ appropriate modes from fetched gist files (based on filenames)."
 (defun gist-get-api (&optional sync)
   (let ((gh-profile-current-profile
          (or gh-profile-current-profile (gh-profile-completing-read))))
-    (gh-gist-api "api" :sync sync :cache t :num-retries 1)))
+    (make-instance 'gh-gist-api :sync sync :cache t :num-retries 1)))
 
 (defun gist-internal-new (files &optional private description callback)
   (let* ((api (gist-get-api))
-         (gist (gh-gist-gist-stub "gist"
-                                  :public (or (not private) json-false)
-                                  :description (or description "")
-                                  :files files))
+         (gist (make-instance 'gh-gist-gist-stub
+                              :public (or (not private) json-false)
+                              :description (or description "")
+                              :files files))
          (resp (gh-gist-new api gist)))
     (gh-url-add-response-callback
      resp
@@ -196,9 +196,9 @@ With a prefix argument, makes a private paste."
                   "txt"))
          (fname (concat (file-name-sans-extension name) "." ext))
          (files (list
-                 (gh-gist-gist-file "file"
-                                    :filename fname
-                                    :content (buffer-substring begin end)))))
+                 (make-instance 'gh-gist-gist-file
+                                :filename fname
+                                :content (buffer-substring begin end)))))
     (gist-internal-new files private
                        (gist-ask-for-description-maybe) callback)))
 
@@ -208,7 +208,7 @@ With a prefix argument, makes a private paste."
       (with-temp-buffer
         (insert-file-contents f)
         (let ((name (file-name-nondirectory f)))
-          (push (gh-gist-gist-file name :filename name :content (buffer-string))
+          (push (make-instance 'gh-gist-gist-file :filename name :content (buffer-string))
                 files))))
     (gist-internal-new files private
                        (gist-ask-for-description-maybe) callback)))
@@ -478,10 +478,10 @@ for the gist."
                                             (buffer-name buffer))))
          (g (clone gist :files
                    (list
-                    (gh-gist-gist-file "file"
-                                       :filename fname
-                                       :content (with-current-buffer buffer
-                                                  (buffer-string))))))
+                    (make-instance 'gh-gist-gist-file
+                                   :filename fname
+                                   :content (with-current-buffer buffer
+                                              (buffer-string))))))
          (resp (gh-gist-edit api g)))
     (gh-url-add-response-callback resp
                                   (lambda (gist)
@@ -501,9 +501,9 @@ for the gist."
                gist "Can't modify a gist that doesn't belong to you" t))
          (g (clone gist :files
                    (list
-                    (gh-gist-gist-file "file"
-                                       :filename fname
-                                       :content nil))))
+                    (make-instance 'gh-gist-gist-file
+                                   :filename fname
+                                   :content nil))))
          (resp (gh-gist-edit api g)))
     (gh-url-add-response-callback resp
                                   (lambda (gist)
