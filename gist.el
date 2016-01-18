@@ -253,9 +253,9 @@ Copies the URL into the kill ring.
 
 With a prefix argument, makes a private paste."
   (interactive "P")
-  (condition-case nil
+  (if (region-active-p)
       (gist-region (point) (mark) private)
-    (mark-inactive (gist-buffer private))))
+    (gist-buffer private)))
 
 ;;;###autoload
 (defun gist-region-or-buffer-private ()
@@ -264,9 +264,9 @@ With a prefix argument, makes a private paste."
 
 Copies the URL into the kill ring."
   (interactive)
-  (condition-case nil
+  (if (region-active-p)
       (gist-region-private (point) (mark))
-    (mark-inactive (gist-buffer-private))))
+    (gist-buffer-private)))
 
 ;;;###autoload
 (defun gist-list-user (username &optional force-reload background)
