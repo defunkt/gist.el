@@ -343,6 +343,9 @@ Copies the URL into the kill ring."
   (interactive)
   (gist-list-user username t background))
 
+(defun gist-list-redisplay ()
+  (gist-list-user 'current-user))
+
 (defun gist-tabulated-entry (gist)
   (let* ((data (gist-parse-gist gist))
          (repo (oref gist :id)))
@@ -632,7 +635,7 @@ put it into `kill-ring'."
   (if all
       (setq gist-list-limits nil)
     (pop gist-list-limits))
-  (gist-list-user 'current-user))
+  (gist-list-redisplay))
 
 (defun gist-list-push-visibility-limit (&optional private)
   (interactive "P")
@@ -641,7 +644,7 @@ put it into `kill-ring'."
                                (and (not flag) (oref g :public))))
                          private)
         gist-list-limits)
-  (gist-list-user 'current-user))
+  (gist-list-redisplay))
 
 (defun gist-parse-tags (tags)
   (let ((words (split-string tags))
@@ -674,7 +677,7 @@ put it into `kill-ring'."
                                          without))))
                            with without)
           gist-list-limits))
-  (gist-list-user 'current-user))
+  (gist-list-redisplay))
 
 (defun gist-list-apply-limits (gists)
   (condition-case nil
