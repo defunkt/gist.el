@@ -152,6 +152,8 @@ appropriate modes from fetched gist files (based on filenames)."
 (unless (hash-table-p gist-list-db-by-user)
   (setq gist-list-db-by-user (make-hash-table :test 'equal)))
 
+(defvar gist-list-limits nil)
+
 (defvar gist-id nil)
 (make-variable-buffer-local 'gist-id)
 
@@ -622,9 +624,24 @@ put it into `kill-ring'."
   (use-local-map gist-list-menu-mode-map)
   (font-lock-add-keywords nil '(("#[^[:space:]]*" . 'font-lock-keyword-face))))
 
+(defun gist-list-apply-limits (gists)
+  (condition-case nil
+      (delete nil
+              (mapcar
+               (lambda (g)
+                 (when (every #'identity
+                              (mapcar (lambda (f) (funcall f g)) gist-list-limits))
+                   g))
+               gists))
+    (error gists)))
+
 (defun gist-list-render (gists &optional background)
   (gist-list-mode)
-  (setq tabulated-list-entries (mapcar 'gist-tabulated-entry gists))
+  (let ((entries (mapcar 'gist-tabulated-entry
+                         (gist-list-apply-limits gists))))
+    (setq tabulated-list-entries entries)
+    (when (not (equal (length gists) (length entries)))
+      (setq mode-name (format "Gists[%d/%d]" (length entries) (length gists)))))
   (tabulated-list-print)
   (gist-list-tag-multi-files)
   (unless background
