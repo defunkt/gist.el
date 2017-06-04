@@ -608,6 +608,7 @@ put it into `kill-ring'."
     (define-key map "*" 'gist-star)
     (define-key map "^" 'gist-unstar)
     (define-key map "f" 'gist-fork)
+    (define-key map "/p" 'gist-list-push-visibility-limit)
     (define-key map "/w" 'gist-list-pop-limit)
     map))
 
@@ -630,6 +631,15 @@ put it into `kill-ring'."
   (if all
       (setq gist-list-limits nil)
     (pop gist-list-limits))
+  (gist-list-user 'current-user))
+
+(defun gist-list-push-visibility-limit (&optional private)
+  (interactive "P")
+  (push (apply-partially (lambda (flag g)
+                           (or (and flag (not (oref g :public)))
+                               (and (not flag) (oref g :public))))
+                         private)
+        gist-list-limits)
   (gist-list-user 'current-user))
 
 (defun gist-list-apply-limits (gists)
