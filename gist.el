@@ -608,6 +608,7 @@ put it into `kill-ring'."
     (define-key map "*" 'gist-star)
     (define-key map "^" 'gist-unstar)
     (define-key map "f" 'gist-fork)
+    (define-key map "/w" 'gist-list-pop-limit)
     map))
 
 (define-derived-mode gist-list-mode tabulated-list-mode "Gists"
@@ -623,6 +624,13 @@ put it into `kill-ring'."
   (tabulated-list-init-header)
   (use-local-map gist-list-menu-mode-map)
   (font-lock-add-keywords nil '(("#[^[:space:]]*" . 'font-lock-keyword-face))))
+
+(defun gist-list-pop-limit (&optional all)
+  (interactive "P")
+  (if all
+      (setq gist-list-limits nil)
+    (pop gist-list-limits))
+  (gist-list-user 'current-user))
 
 (defun gist-list-apply-limits (gists)
   (condition-case nil
