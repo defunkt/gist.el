@@ -609,6 +609,7 @@ put it into `kill-ring'."
     (define-key map "^" 'gist-unstar)
     (define-key map "f" 'gist-fork)
     (define-key map "/p" 'gist-list-push-visibility-limit)
+    (define-key map "/t" 'gist-list-push-tag-limit)
     (define-key map "/w" 'gist-list-pop-limit)
     map))
 
@@ -640,6 +641,39 @@ put it into `kill-ring'."
                                (and (not flag) (oref g :public))))
                          private)
         gist-list-limits)
+  (gist-list-user 'current-user))
+
+(defun gist-parse-tags (tags)
+  (let ((words (split-string tags))
+        with without)
+    (dolist (w words)
+      (cond ((string-prefix-p "+" w)
+             (push (substring w 1) with))
+            ((string-prefix-p "-" w)
+             (push (substring w 1) without))
+            (t
+             (push w with))))
+    (list with without)))
+
+(defun gist-list-push-tag-limit (tags)
+  (interactive "sTags: ")
+  (let* ((lsts (gist-parse-tags tags))
+         (with (car lsts))
+         (without (cadr lsts)))
+    (push (apply-partially (lambda (with without g)
+                             (and
+                              (every (lambda (tag)
+                                       (string-match-p
+                                        (format "#%s\\>" tag)
+                                        (oref g :description)))
+                                     with)
+                              (not (some (lambda (tag)
+                                           (string-match-p
+                                            (format "#%s\\>" tag)
+                                            (oref g :description)))
+                                         without))))
+                           with without)
+          gist-list-limits))
   (gist-list-user 'current-user))
 
 (defun gist-list-apply-limits (gists)
