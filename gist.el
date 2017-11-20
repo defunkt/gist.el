@@ -538,7 +538,12 @@ for the gist."
 
 (defun gist-current-url ()
   "Helper function to fetch current gist url"
-  (let* ((id (tabulated-list-get-id))
+  (let* ((id (or (and (boundp 'gist-list-mode)
+                      gist-list-mode
+                      (tabulated-list-get-id))
+                 (and (boundp 'gist-mode)
+                      gist-mode
+                      gist-id)))
          (gist (gist-list-db-get-gist id)))
     (oref gist :html-url)))
 
