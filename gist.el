@@ -776,13 +776,20 @@ put it into `kill-ring'."
 
 ;;; Dired integration
 
-(require 'dired)
-
 (defun dired-do-gist (&optional private)
   (interactive "P")
   (gist-files (dired-get-marked-files) private))
 
-(define-key dired-mode-map "@" 'dired-do-gist)
+;;;###autoload
+(define-minor-mode gist-dired-mode
+  "Minor mode for using gist within dired.
+
+\\{gist-dired-mode-map}"
+  :keymap (let ((map (make-sparse-keymap)))
+	    (define-key map "@" 'dired-do-gist)
+	    map)
+  (unless (derived-mode-p 'dired-mode)
+    (setq gist-dired-mode nil)))
 
 (provide 'gist)
 ;;; gist.el ends here
