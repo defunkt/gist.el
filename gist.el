@@ -36,18 +36,17 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'cl))
 
+(require 'cl-lib)
 (require 'eieio)
 (require 'eieio-base)
 (require 'timezone)
-
 (require 'gh-api)
 (require 'gh-gist)
 (require 'gh-profile)
-
 (require 'tabulated-list)
+
+(declare-function dired-get-marked-files "dired")
 
 (defgroup gist nil
   "Interface to GitHub's Gist."
@@ -374,14 +373,14 @@ the list."
                  (aref date 4))))
 
 (defun gist-parse-gist (gist)
-  "Returns a list of the gist's attributes for display, given the xml list
-for the gist."
+  "Return a list of the GIST's attributes for display.
+See also the variable `gist-list-format'."
   (let ((repo (oref gist :id))
         (creation (gist--get-time gist))
         (desc (or (oref gist :description) ""))
         (public (eq t (oref gist :public)))
         (fnames (mapcar (lambda (f) (when f (oref f :filename))) (oref gist :files))))
-    (loop for (id label width sort format) in gist-list-format
+    (cl-loop for (id label width sort format) in gist-list-format
           collect (let ((string-formatter (if (eq id 'created)
                                               'format-time-string
                                             'format))
@@ -625,8 +624,8 @@ put it into `kill-ring'."
 \\<gist-list-menu-mode-map>
 \\{gist-list-menu-mode-map}"
   (setq tabulated-list-format
-        (apply 'vector
-               (loop for (sym label width sort format) in gist-list-format
+        (apply #'vector
+               (cl-loop for (_sym label width sort _format) in gist-list-format
                      collect (list label width sort)))
         tabulated-list-padding 2
         tabulated-list-sort-key nil)
@@ -669,12 +668,12 @@ put it into `kill-ring'."
          (without (cadr lsts)))
     (push (apply-partially (lambda (with without g)
                              (and
-                              (every (lambda (tag)
+                              (cl-every (lambda (tag)
                                        (string-match-p
                                         (format "#%s\\>" tag)
                                         (oref g :description)))
                                      with)
-                              (not (some (lambda (tag)
+                              (not (cl-some (lambda (tag)
                                            (string-match-p
                                             (format "#%s\\>" tag)
                                             (oref g :description)))
@@ -688,27 +687,32 @@ put it into `kill-ring'."
       (delete nil
               (mapcar
                (lambda (g)
-                 (when (every #'identity
+                 (when (cl-every #'identity
                               (mapcar (lambda (f) (funcall f g)) gist-list-limits))
                    g))
                gists))
     (error gists)))
 
 (defun gist-list-render (gists &optional background)
+  "Render list of GISTS.
+If BACKGROUND is non-nil, don't show it's buffer."
   (gist-list-mode)
-  (let ((entries (mapcar 'gist-tabulated-entry
+  (let ((entries (mapcar #'gist-tabulated-entry
                          (gist-list-apply-limits gists))))
     (setq tabulated-list-entries entries)
-    (when (not (equal (length gists) (length entries)))
-      (setq mode-name (format "Gists[%d/%d]" (length entries) (length gists)))))
+    (when (not (equal (length gists)
+                      (length entries)))
+      (setq mode-name (format "Gists[%d/%d]" (length entries)
+                              (length gists)))))
   (tabulated-list-print)
   (gist-list-tag-multi-files)
   (unless background
     (set-window-buffer nil (current-buffer))))
 
 (defun gist-list-tag-multi-files ()
+  "Put tags to gists with multiple files in the padding area."
   (let ((ids nil))
-    (maphash (lambda (k v)
+    (maphash (lambda (_k v)
                (when (< 1 (length (oref v :files)))
                  (push (oref v :id) ids)))
              gist-list-db)
