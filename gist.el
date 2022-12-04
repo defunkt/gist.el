@@ -810,19 +810,18 @@ With NEW-NAME rename gist."
     map))
 
 (define-minor-mode gist-mode
-  "Minor mode for buffers containing gists files"
+  "Minor mode for buffers containing gists files."
   :lighter " gist"
   :map 'gist-mode-map)
 
 ;;; Dired integration
 
-(require 'dired)
-
-(defun dired-do-gist (&optional private)
+(defun gist-dired-do-gist (&optional private)
+  "Create gist from marked files in `dired'.
+If PRIVATE is non-nil, create private gists."
   (interactive "P")
+  (require 'dired)
   (gist-files (dired-get-marked-files) private))
-
-(define-key dired-mode-map "@" 'dired-do-gist)
 
 (provide 'gist)
 ;;; gist.el ends here
