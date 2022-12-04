@@ -187,7 +187,7 @@ Invoke function CALLBACK with created gist as argument."
          (resp (gh-gist-new api gist)))
     (gh-url-add-response-callback
      resp
-     (let ((profile (oref api :profile))
+     (let ((profile (oref api profile))
            (cb callback))
        (lambda (gist)
          (let ((gh-profile-current-profile profile))
@@ -244,7 +244,7 @@ If PRIVATE is non-nil, create private gists."
 
 (defun gist-created-callback (gist)
   "Reload gists and copy url of new GIST."
-  (let ((location (oref gist :html-url)))
+  (let ((location (oref gist html-url)))
     (gist-list-reload 'current-user t)
     (message gist-created-fmt location)
     (when gist-view-gist
@@ -332,7 +332,7 @@ FORCE-RELOAD to reload the gists for the current buffer."
                             username)
                        (gh-api-get-username api))))
     (when force-reload
-      (pcache-clear (oref api :cache))
+      (pcache-clear (oref api cache))
       (or background (message "Retrieving list of gists...")))
     (unless (and background (not (get-buffer bufname)))
       (let ((resp (gh-gist-list api username)))
@@ -345,7 +345,7 @@ FORCE-RELOAD to reload the gists for the current buffer."
                (gist-lists-retrieved-callback gists background)))))
         (gh-url-add-response-callback
          resp
-         (let ((profile (oref api :profile))
+         (let ((profile (oref api profile))
                (buffer bufname))
            (lambda (&rest _args)
              (with-current-buffer buffer
@@ -371,24 +371,25 @@ If BACKGROUND is non-nil, don't show it's buffer."
   (gist-list-user 'current-user))
 
 (defun gist-tabulated-entry (gist)
+  "Make tabulated entry from GIST."
   (let* ((data (gist-parse-gist gist))
-         (repo (oref gist :id)))
+         (repo (oref gist id)))
     (list repo (apply #'vector data))))
 
 (defun gist-lists-retrieved-callback (gists &optional background)
   "Display list of retrieved GISTS.
 If BACKGROUND is non-nil, don't show it's buffer."
   (dolist (g (gethash gist-list-buffer-user gist-list-db-by-user))
-    (remhash (oref g :id) gist-list-db))
+    (remhash (oref g id) gist-list-db))
   (dolist (g gists)
-    (puthash (oref g :id) g gist-list-db))
+    (puthash (oref g id) g gist-list-db))
   (puthash gist-list-buffer-user gists gist-list-db-by-user)
   (gist-list-render (gethash gist-list-buffer-user gist-list-db-by-user)
                     background))
 
 (defun gist--get-time (gist)
   "Return timestamp from GIST."
-  (let* ((date (timezone-parse-date (oref gist :date)))
+  (let* ((date (timezone-parse-date (oref gist date)))
          (time (timezone-parse-time (aref date 3))))
     (encode-time (string-to-number (aref time 2))
                  (string-to-number (aref time 1))
@@ -401,25 +402,27 @@ If BACKGROUND is non-nil, don't show it's buffer."
 (defun gist-parse-gist (gist)
   "Return a list of the GIST's attributes for display.
 See also the variable `gist-list-format'."
-  (let ((repo (oref gist :id))
+  (let ((repo (oref gist id))
         (creation (gist--get-time gist))
-        (desc (or (oref gist :description) ""))
-        (public (eq t (oref gist :public)))
-        (fnames (mapcar (lambda (f) (when f (oref f :filename))) (oref gist :files))))
-    (cl-loop for (id label width sort format) in gist-list-format
-          collect (let ((string-formatter (if (eq id 'created)
-                                              'format-time-string
-                                            'format))
-                        (value (cond ((eq id 'id) repo)
-                                     ((eq id 'created) creation)
-                                     ((eq id 'visibility) public)
-                                     ((eq id 'description) desc)
-                                     ((eq id 'files) fnames))))
-                    (funcall (if (stringp format)
-                                 (lambda (val)
-                                   (funcall string-formatter format val))
-                               format)
-                             value)))))
+        (desc (or (oref gist description) ""))
+        (public (eq t (oref gist public)))
+        (fnames (mapcar (lambda (f)
+                          (when f (oref f filename)))
+                        (oref gist files))))
+    (cl-loop for (id _label _width _sort format) in gist-list-format
+             collect (let ((string-formatter (if (eq id 'created)
+                                                 'format-time-string
+                                               'format))
+                           (value (cond ((eq id 'id) repo)
+                                        ((eq id 'created) creation)
+                                        ((eq id 'visibility) public)
+                                        ((eq id 'description) desc)
+                                        ((eq id 'files) fnames))))
+                       (funcall (if (stringp format)
+                                    (lambda (val)
+                                      (funcall string-formatter format val))
+                                  format)
+                                value)))))
 
 ;;;###autoload
 (defun gist-fetch (id)
@@ -435,25 +438,25 @@ See also the variable `gist-list-format'."
     (let ((api (gist-get-api t)))
       (cond ((null gist)
              ;; fetch it
-             (setq gist (oref (gh-gist-get api id) :data))
-             (puthash (oref gist :id) gist gist-list-db)
-             (let* ((user (oref gist :user))
+             (setq gist (oref (gh-gist-get api id) data))
+             (puthash (oref gist id) gist gist-list-db)
+             (let* ((user (oref gist user))
                     (gists (push gist (gethash user gist-list-db-by-user))))
                (puthash user gists gist-list-db-by-user)))
             ((not (gh-gist-gist-has-files gist))
              (gh-gist-get api gist))))
-    (let ((files (oref gist :files)))
+    (let ((files (oref gist files)))
       (setq multi (< 1 (length files)))
       (dolist (f files)
         (let ((buffer (get-buffer-create (format "%s/%s" prefix
-                                                 (oref f :filename))))
-              (mode (car (rassoc (file-name-extension (oref f :filename))
+                                                 (oref f filename))))
+              (mode (car (rassoc (file-name-extension (oref f filename))
                                  gist-supported-modes-alist))))
           (with-current-buffer buffer
             (delete-region (point-min)
                            (point-max))
-            (insert (oref f :content))
-            (let ((fname (oref f :filename)))
+            (insert (oref f content))
+            (let ((fname (oref f filename)))
               ;; set major mode
               (if (fboundp mode)
                   (funcall mode)
@@ -475,7 +478,6 @@ See also the variable `gist-list-format'."
                  '((name)))
       (switch-to-buffer-other-window result))))
 
-
 (defun gist-fetch-current ()
   "Fetch gist at point and switch to it's buffer."
   (interactive)
@@ -490,6 +492,7 @@ See also the variable `gist-list-format'."
     (select-window win)))
 
 (defun gist--check-perms-and-get-api (gist errormsg apiflg)
+  "Signal user error ERRORMSG if GIST is not present in `gist-list-db-by-user'."
   (let* ((api (gist-get-api apiflg))
          (username (gh-api-get-username api))
          (gs (gethash username gist-list-db-by-user)))
@@ -504,7 +507,7 @@ See also the variable `gist-list-format'."
          (gist (gist-list-db-get-gist id))
          (api (gist--check-perms-and-get-api
                gist "Can't edit a gist that doesn't belong to you" t)))
-    (let* ((old-descr (oref gist :description))
+    (let* ((old-descr (oref gist description))
            (new-descr (read-from-minibuffer "Description: " old-descr))
            (g (clone gist
                      :files nil
@@ -544,8 +547,8 @@ See also the variable `gist-list-format'."
                  (let* ((id (tabulated-list-get-id))
                         (gist (gist-list-db-get-gist id)))
                    (mapcar #'(lambda (f)
-                               (oref f :filename))
-                           (oref gist :files))))))
+                               (oref f filename))
+                           (oref gist files))))))
   (let* ((id (tabulated-list-get-id))
          (gist (gist-list-db-get-gist id))
          (api (gist--check-perms-and-get-api
@@ -579,8 +582,7 @@ See also the variable `gist-list-format'."
                       gist-mode
                       gist-id)))
          (gist (gist-list-db-get-gist id)))
-    (oref gist :html-url)))
-
+    (oref gist html-url)))
 
 (defun gist-print-current-url ()
   "Display and copy the currently selected gist's url in the echo area."
@@ -594,6 +596,7 @@ See also the variable `gist-list-format'."
   (browse-url (gist-current-url)))
 
 (defun gist--do-star (id how msg)
+  "Star (if HOW is non-nil) or unstar gist with ID and show message MSG."
   (let* ((api (gist-get-api t))
          (resp (gh-gist-set-star api id how)))
     (gh-url-add-response-callback resp
@@ -689,13 +692,15 @@ With prefix argument ALL, show all gists, othervise pop latest filter."
 If PRIVATE is non nil, show public gists, othervise private."
   (interactive "P")
   (push (apply-partially (lambda (flag g)
-                           (or (and flag (not (oref g :public)))
-                               (and (not flag) (oref g :public))))
+                           (or (and flag (not (oref g public)))
+                               (and (not flag)
+                                    (oref g public))))
                          private)
         gist-list-limits)
   (gist-list-redisplay))
 
 (defun gist-parse-tags (tags)
+  "Parse TAGS."
   (let ((words (split-string tags))
         with without)
     (dolist (w words)
@@ -708,6 +713,7 @@ If PRIVATE is non nil, show public gists, othervise private."
     (list with without)))
 
 (defun gist-list-push-tag-limit (tags)
+  "Push TAGS limit."
   (interactive "sTags: ")
   (let* ((lsts (gist-parse-tags tags))
          (with (car lsts))
@@ -715,26 +721,29 @@ If PRIVATE is non nil, show public gists, othervise private."
     (push (apply-partially (lambda (with without g)
                              (and
                               (cl-every (lambda (tag)
-                                       (string-match-p
-                                        (format "#%s\\>" tag)
-                                        (oref g :description)))
-                                     with)
+                                          (string-match-p
+                                           (format "#%s\\>" tag)
+                                           (oref g description)))
+                                        with)
                               (not (cl-some (lambda (tag)
-                                           (string-match-p
-                                            (format "#%s\\>" tag)
-                                            (oref g :description)))
-                                         without))))
+                                              (string-match-p
+                                               (format "#%s\\>" tag)
+                                               (oref g description)))
+                                            without))))
                            with without)
           gist-list-limits))
   (gist-list-redisplay))
 
 (defun gist-list-apply-limits (gists)
+  "Apply filter to GISTS."
   (condition-case nil
       (delete nil
               (mapcar
                (lambda (g)
                  (when (cl-every #'identity
-                              (mapcar (lambda (f) (funcall f g)) gist-list-limits))
+                                 (mapcar (lambda (f)
+                                           (funcall f g))
+                                         gist-list-limits))
                    g))
                gists))
     (error gists)))
@@ -759,8 +768,8 @@ If BACKGROUND is non-nil, don't show it's buffer."
   "Put tags to gists with multiple files in the padding area."
   (let ((ids nil))
     (maphash (lambda (_k v)
-               (when (< 1 (length (oref v :files)))
-                 (push (oref v :id) ids)))
+               (when (< 1 (length (oref v files)))
+                 (push (oref v id) ids)))
              gist-list-db)
     (save-excursion
       (goto-char (point-min))
@@ -787,8 +796,8 @@ With NEW-NAME rename gist."
       (when new-name
         ;; remove old file as well
         (push (make-instance 'gh-gist-gist-file
-                                    :filename gist-filename
-                                    :content nil)
+                             :filename gist-filename
+                             :content nil)
               files))
       (let* ((g (clone gist
                        :files files))
@@ -803,8 +812,8 @@ With NEW-NAME rename gist."
                                                       (concat "/" new-name)
                                                       (buffer-name)))
              (setq gist-filename new-name))
-           (let ((g (gist-list-db-get-gist (oref gist :id))))
-             (oset g :files (oref gist :files)))))))))
+           (let ((g (gist-list-db-get-gist (oref gist id))))
+             (oset g :files (oref gist files)))))))))
 
 (defun gist-mode-save-buffer ()
   "Save gist in edit buffer."
