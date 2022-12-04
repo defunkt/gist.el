@@ -1,6 +1,7 @@
-;;; gist.el --- Emacs integration for gist.github.com
+;;; gist.el --- Emacs integration for gist.github.com -*- lexical-binding: t; -*-
 
 ;; Author: Yann Hodique <yann.hodique@gmail.com>
+;; URL: https://github.com/defunkt/gist.el
 ;; Original Author: Christian Neukirchen <chneukirchen@gmail.com>
 ;; Contributors: Chris Wanstrath <chris@ozmm.org>
 ;;               Will Farrington <wcfarrington@gmail.com>
@@ -9,7 +10,7 @@
 ;;               Dan McKinley
 ;;               Marcelo Muñoz Araya <ma.munoz.araya@gmail.com>
 ;; Version: 1.4.0
-;; Package-Requires: ((emacs "24.1") (gh "0.10.0"))
+;; Package-Requires: ((emacs "24.3") (gh "0.10.0"))
 ;; Keywords: tools
 ;; Homepage: https://github.com/defunkt/gist.el
 
@@ -186,27 +187,31 @@ Invoke function CALLBACK with created gist as argument."
          (resp (gh-gist-new api gist)))
     (gh-url-add-response-callback
      resp
-     (lexical-let ((profile (oref api :profile))
-                   (cb callback))
+     (let ((profile (oref api :profile))
+           (cb callback))
        (lambda (gist)
          (let ((gh-profile-current-profile profile))
            (funcall (or cb 'gist-created-callback) gist)))))))
 
 (defun gist-ask-for-description-maybe ()
+  "Read a string from the minibuffer if `gist-ask-for-description' is non nil."
   (when gist-ask-for-description
     (read-from-minibuffer "Gist description: ")))
 
 (defun gist-ask-for-filename-maybe (fname)
+  "Read a name for gist the minibuffer If `gist-ask-for-filename' is non-nil.
+FNAME is as default name for gist."
   (if gist-ask-for-filename
       (read-string (format "File name (%s): " fname) nil nil fname)
     fname))
 
 ;;;###autoload
 (defun gist-region (begin end &optional private callback)
-  "Post the current region as a new paste at gist.github.com
+  "Post the current region between BEGIN and END as a new paste.
 Copies the URL into the kill ring.
 
-With a prefix argument, makes a private paste."
+With a prefix argument PRIVATE, makes a private paste.
+Invoke function CALLBACK with created gist as argument."
   (interactive "r\nP")
   (let* ((file (or (buffer-file-name) (buffer-name)))
          (name (file-name-nondirectory file))
@@ -333,40 +338,46 @@ FORCE-RELOAD to reload the gists for the current buffer."
       (let ((resp (gh-gist-list api username)))
         (gh-url-add-response-callback
          resp
-         (lexical-let ((buffer bufname))
+         (let ((buffer bufname))
            (lambda (gists)
              (with-current-buffer (get-buffer-create buffer)
                (setq gist-list-buffer-user username)
                (gist-lists-retrieved-callback gists background)))))
         (gh-url-add-response-callback
          resp
-         (lexical-let ((profile (oref api :profile))
-                       (buffer bufname))
-           (lambda (&rest args)
+         (let ((profile (oref api :profile))
+               (buffer bufname))
+           (lambda (&rest _args)
              (with-current-buffer buffer
                (setq gh-profile-current-profile profile)))))))))
 
 ;;;###autoload
 (defun gist-list (&optional force-reload background)
-  "Displays a list of all of the current user's gists in a new buffer."
+  "Display a list of all of the current user's gists in a new buffer.
+Clear caches if FORCE-RELOAD is non-nil.
+If BACKGROUND is non-nil, don't show it's buffer."
   (interactive "P")
   (gist-list-user 'current-user force-reload background))
 
+
 (defun gist-list-reload (&optional username background)
+  "Clear caches and reload gists of user with USERNAME.
+If BACKGROUND is non-nil, don't show it's buffer."
   (interactive)
   (gist-list-user username t background))
 
 (defun gist-list-redisplay ()
+  "Redisplay a list of current user gists."
   (gist-list-user 'current-user))
 
 (defun gist-tabulated-entry (gist)
   (let* ((data (gist-parse-gist gist))
          (repo (oref gist :id)))
-    (list repo (apply 'vector data))))
+    (list repo (apply #'vector data))))
 
 (defun gist-lists-retrieved-callback (gists &optional background)
-  "Called when the list of gists has been retrieved. Displays
-the list."
+  "Display list of retrieved GISTS.
+If BACKGROUND is non-nil, don't show it's buffer."
   (dolist (g (gethash gist-list-buffer-user gist-list-db-by-user))
     (remhash (oref g :id) gist-list-db))
   (dolist (g gists)
@@ -586,30 +597,33 @@ See also the variable `gist-list-format'."
   (let* ((api (gist-get-api t))
          (resp (gh-gist-set-star api id how)))
     (gh-url-add-response-callback resp
-                                  (lambda (gist)
+                                  (lambda (_gist)
                                     (message msg id)))))
 
 ;;;###autoload
 (defun gist-star ()
+  "Star gist at point."
   (interactive)
   (let ((id (tabulated-list-get-id)))
     (gist--do-star id t "Starred gist %s")))
 
 ;;;###autoload
 (defun gist-unstar ()
+  "Unstar gist at point."
   (interactive)
   (let ((id (tabulated-list-get-id)))
     (gist--do-star id nil "Unstarred gist %s")))
 
 ;;;###autoload
 (defun gist-list-starred (&optional background)
-  "List your starred gists."
+  "List your starred gists.
+If BACKGROUND is non nil, don't show the buffer."
   (interactive)
   (let* ((api (gist-get-api t))
          (resp (gh-gist-list-starred api)))
     (gh-url-add-response-callback
      resp
-     (lexical-let ((buffer "*starred-gists*"))
+     (let ((buffer "*starred-gists*"))
        (lambda (gists)
          (with-current-buffer (get-buffer-create buffer)
            (gist-list-render gists background)))))))
